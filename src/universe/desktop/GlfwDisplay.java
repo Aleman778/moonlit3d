@@ -1,17 +1,14 @@
 package universe.desktop;
 
-import universe.app.Display;
-import universe.app.Screen;
+import universe.app.*;
+import universe.opengl.GLProfile;
+import universe.opengl.GLRenderContext;
 import universe.util.Disposable;
 
-import static org.lwjgl.system.MemoryUtil.*;
-
 import org.lwjgl.PointerBuffer;
-import org.lwjgl.glfw.GLFWKeyCallbackI;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.glfw.GLFWWindowPosCallbackI;
-import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
+import org.lwjgl.glfw.GLFWErrorCallback;
 
+import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
@@ -29,6 +26,7 @@ public class GlfwDisplay implements Display, Disposable {
 	
 	private static boolean initialized = false;
 
+	private RenderContext context;
 	private GlfwScreen screen;
 	private String title;
 	private long window;
@@ -49,7 +47,16 @@ public class GlfwDisplay implements Display, Disposable {
 	 * @param title the title of the window
 	 */
 	public GlfwDisplay(String title) {
-		this(title, 640, 480);
+		this(title, null);
+	}
+	
+	/**
+	 * Constructor.
+	 * @param title the title of the window
+	 * @param profile the OpenGL profile
+	 */
+	public GlfwDisplay(String title, GLProfile profile) {
+		this(title, profile, 640, 480);
 	}
 	
 	/**
@@ -58,8 +65,18 @@ public class GlfwDisplay implements Display, Disposable {
 	 * @param width the width of the window
 	 * @param height the height of the window
 	 */
-	public GlfwDisplay(String title, int width, int height) {
+	public GlfwDisplay(String title, GLProfile profile, int width, int height) {
 		init();
+
+		if (profile != null) {
+			glfwWindowHint(GLFW_OPENGL_PROFILE, profile.isCompatible() ? GLFW_OPENGL_COMPAT_PROFILE : GLFW_OPENGL_CORE_PROFILE);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, profile.getMajor());
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, profile.getMinor());
+		} else {
+			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+		}
 		
 		this.window = glfwCreateWindow(width, height, title, NULL, NULL);
 		this.title = title;
@@ -67,8 +84,9 @@ public class GlfwDisplay implements Display, Disposable {
 		this.height = height;
 		this.fullscreen = false;
 		this.visible = true;
+		this.context = null;
 		this.screen = null;
-
+		
 		int[] xpos = new int[1];
 		int[] ypos = new int[1];
 		glfwGetWindowPos(window, xpos, ypos);
@@ -90,9 +108,17 @@ public class GlfwDisplay implements Display, Disposable {
 		});
 	}
 
+	/**
+	 * Initializes the GLFW library.
+	 */
 	private static void init() {
 		if (!initialized) {
-			initialized = glfwInit();
+			if (glfwInit()) {
+				initialized = true;
+				glfwSetErrorCallback(GLFWErrorCallback.createThrow());
+			} else {
+				throw new IllegalStateException("The GLFW library failed to initialize.");
+			}
 		}
 	}
 	
@@ -134,6 +160,20 @@ public class GlfwDisplay implements Display, Disposable {
 		glfwRestoreWindow(window);
 	}
 
+	@Override
+	public void setRenderer(RenderApi renderer) {
+		glfwMakeContextCurrent(window);
+		
+		switch (renderer) {
+		case OPENGL: case PREFERRED:
+			context = new GLRenderContext();
+			break;
+			
+		default:
+			throw new IllegalStateException("Unsupported rendering api: " + renderer.getName());
+		}
+	}
+	
 	/**
 	 * Checks if the window should be closed.
 	 * @return true if the window has been closed
@@ -334,6 +374,22 @@ public class GlfwDisplay implements Display, Disposable {
 	}
 	
 	/**
+	 * Set the decorated attribute.
+	 * @param iconified flag
+	 */
+	public void setDecorated(boolean decorated) {
+		glfwSetWindowAttrib(window, GLFW_DECORATED, decorated ? GLFW_TRUE : GLFW_FALSE);
+	}
+	
+	/**
+	 * Checks if the window is decorated.
+	 * @return floating attribute
+	 */
+	public boolean isDecorated() {
+		return glfwGetWindowAttrib(window, GLFW_DECORATED) == GLFW_TRUE;
+	}
+	
+	/**
 	 * Checks if the window is floating.
 	 * @return floating attribute
 	 */
@@ -388,7 +444,6 @@ public class GlfwDisplay implements Display, Disposable {
 	public boolean isMaximized() {
 		return glfwGetWindowAttrib(window, GLFW_MAXIMIZED) == GLFW_TRUE;
 	}
-
 
 	/**
 	 * Set the maximized attribute.
