@@ -50,4 +50,9 @@ public class GlfwScreen implements Screen {
 	public long getMonitor() {
 		return monitor;
 	}
+	
+	@Override
+	public String toString() {
+		return glfwGetMonitorName(monitor);
+	}
 }

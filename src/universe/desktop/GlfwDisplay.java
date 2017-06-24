@@ -8,6 +8,12 @@ import universe.util.Disposable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.nio.IntBuffer;
+
+import org.lwjgl.BufferUtils;
+
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -22,24 +28,32 @@ import static org.lwjgl.glfw.GLFW.*;
  * @author Aleman778
  * @see <a href="http://www.glfw.org/">http://www.glfw.org/</a>
  */
-public class GlfwDisplay implements Display, Disposable {
+public class GlfwDisplay extends Display implements Runnable, Disposable {
+
+	private static final IntBuffer xpos = BufferUtils.createIntBuffer(1);
+	private static final IntBuffer ypos = BufferUtils.createIntBuffer(1);
 	
 	private static boolean initialized = false;
 
-	private RenderContext context;
-	private GlfwScreen screen;
+	private RenderContext context = new GLRenderContext();
+	private GlfwScreen screen = null;
+	private GLProfile profile = null;
+	private Thread thread;
 	private String title;
-	private long window;
-	private boolean visible;
-	private boolean fullscreen;
+	private long window = NULL;
+	private boolean visible = false;
+	private boolean disposed = false;
+	private boolean fullscreen = false;
+	private int minWidth = -1, minHeight = -1;
+	private int maxWidth = -1, maxHeight = -1;
 	private int width, height;
-	private int x, y;
+	private int x = -1, y = -1;
 
 	/**
 	 * Default constructor.
 	 */
 	public GlfwDisplay() {
-		this("Universe Engine");
+		this("");
 	}
 	
 	/**
@@ -47,16 +61,16 @@ public class GlfwDisplay implements Display, Disposable {
 	 * @param title the title of the window
 	 */
 	public GlfwDisplay(String title) {
-		this(title, null);
+		this(title, 640, 480);
 	}
 	
 	/**
 	 * Constructor.
-	 * @param title the title of the window
-	 * @param profile the OpenGL profile
+	 * @param width the width of the window
+	 * @param height the height of the window
 	 */
-	public GlfwDisplay(String title, GLProfile profile) {
-		this(title, profile, 640, 480);
+	public GlfwDisplay(int width, int height) {
+		this("", width, height);
 	}
 	
 	/**
@@ -65,53 +79,20 @@ public class GlfwDisplay implements Display, Disposable {
 	 * @param width the width of the window
 	 * @param height the height of the window
 	 */
-	public GlfwDisplay(String title, GLProfile profile, int width, int height) {
+	public GlfwDisplay(String title, int width, int height) {
 		init();
 
-		if (profile != null) {
-			glfwWindowHint(GLFW_OPENGL_PROFILE, profile.isCompatible() ? GLFW_OPENGL_COMPAT_PROFILE : GLFW_OPENGL_CORE_PROFILE);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, profile.getMajor());
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, profile.getMinor());
-		} else {
-			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-		}
-		
-		this.window = glfwCreateWindow(width, height, title, NULL, NULL);
 		this.title = title;
 		this.width = width;
 		this.height = height;
-		this.fullscreen = false;
-		this.visible = true;
-		this.context = null;
-		this.screen = null;
 		
-		int[] xpos = new int[1];
-		int[] ypos = new int[1];
-		glfwGetWindowPos(window, xpos, ypos);
-		this.x = xpos[0];
-		this.y = ypos[0];
-		
-		glfwSetWindowPosCallback(window,(long window, int x, int y) -> {
-			if (!fullscreen) {
-				this.x = x;
-				this.y = y;
-			}
-		});
-		
-		glfwSetWindowSizeCallback(window, (long window, int w, int h) -> {
-			if (!fullscreen) {
-				this.width = w;
-				this.height = h;
-			}
-		});
+		setName(title);
 	}
 
 	/**
 	 * Initializes the GLFW library.
 	 */
-	private static void init() {
+	private static final void init() {
 		if (!initialized) {
 			if (glfwInit()) {
 				initialized = true;
@@ -122,21 +103,41 @@ public class GlfwDisplay implements Display, Disposable {
 		}
 	}
 	
-	/**
-	 * Processes the events stored in the window event queue.
-	 */
-	@Override
-	public void update() {
-		glfwPollEvents();
+	public static final void terminate() {
+		glfwTerminate();
 	}
-
+	
 	/**
-	 * Swaps the buffers that are managed by the rendering system.<br>
-	 * <b>Note:</b> the window must have a rendering context.
+	 * This method does two things:
+	 *  - Swaps the buffers that are managed by the rendering system.<br>
+	 *  - Processes the events stored in the window event queue.<br>
 	 */
 	@Override
-	public void refresh() {
+	public final void refresh() {
+		glfwPollEvents();
 		glfwSwapBuffers(window);
+	}
+	
+	@Override
+	public final void run() {
+		createWindow();
+		execSetup();
+		loop();
+	}
+	
+	private void loop() {
+		while (!isClosed()) {
+			refresh();
+			
+			render();
+			
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
@@ -145,6 +146,8 @@ public class GlfwDisplay implements Display, Disposable {
 	@Override
 	public void dispose() {
 		glfwDestroyWindow(window);
+		disposed = true;
+		visible = false;
 	}
 	
 	/**
@@ -162,7 +165,9 @@ public class GlfwDisplay implements Display, Disposable {
 
 	@Override
 	public void setRenderer(RenderApi renderer) {
-		glfwMakeContextCurrent(window);
+		if (isCreated()) {
+			throw new IllegalStateException("The renderer cannot be set after the window has been created.");
+		}
 		
 		switch (renderer) {
 		case OPENGL: case PREFERRED:
@@ -175,11 +180,38 @@ public class GlfwDisplay implements Display, Disposable {
 	}
 	
 	/**
+	 * Set the profile for the OpenGL renderer.
+	 * <br><b>Note:</b> This method is only available for the OpenGL renderer.
+	 * <br><b>Note:</b> By setting the parameter profile to <i>null</i> the profile will be
+	 * set to the preferred profile based on the users hardware.
+	 * @param profile the OpenGL profile to use
+	 */
+	public void setProfile(GLProfile profile) {
+		if (isActive()) {
+			throw new IllegalStateException("The OpenGL Profile has to be set before ");
+		}
+		
+		this.profile = profile;
+	}
+	
+	/**
 	 * Checks if the window should be closed.
 	 * @return true if the window has been closed
 	 */
 	public boolean isClosed() {
+		if (!isCreated()) {
+			return true;
+		}
+		
 		return glfwWindowShouldClose(window);
+	}
+	
+	/**
+	 * Check if the current window is active.
+	 * @return true if the window is active.
+	 */
+	public boolean isActive() {
+		return visible && isCreated();
 	}
 	
 	/**
@@ -231,16 +263,19 @@ public class GlfwDisplay implements Display, Disposable {
 		this.width = width;
 		this.height = height;
 		
-		glfwSetWindowSize(window, width, height);
+		if (hasReference()) {
+			glfwSetWindowSize(window, width, height);
+		}
 	}
-
+	
 	/**
 	 * Set the minimum size limit of the window.
+	 * <br><b>Note:</b> Setting the size limit to -1 will 
 	 * @param minWidth the minimum width
 	 * @param minHeight the minimum height
 	 */
 	public void setSizeLimit(int minWidth, int minHeight) {
-		glfwSetWindowSizeLimits(window, minWidth, minHeight, GLFW_DONT_CARE, GLFW_DONT_CARE);
+		setSizeLimit(minWidth, minHeight, GLFW_DONT_CARE, GLFW_DONT_CARE);
 	}
 	
 	/**
@@ -251,7 +286,14 @@ public class GlfwDisplay implements Display, Disposable {
 	 * @param maxHeight the maximum height
 	 */
 	public void setSizeLimit(int minWidth, int minHeight, int maxWidth, int maxHeight) {
-		glfwSetWindowSizeLimits(window, minWidth, minHeight, maxWidth, maxHeight);
+		this.minWidth = minWidth;
+		this.minHeight = minHeight;
+		this.maxWidth = maxWidth;
+		this.maxHeight = maxHeight;
+		
+		if (hasReference()) {
+			glfwSetWindowSizeLimits(window, minWidth, minHeight, maxWidth, maxHeight);
+		}
 	}
 
 	/**
@@ -293,7 +335,10 @@ public class GlfwDisplay implements Display, Disposable {
 	public void setLocation(int x, int y) {
 		this.x = x;
 		this.y = y;
-		glfwSetWindowPos(window, x, y);
+		
+		if (hasReference()) {
+			glfwSetWindowPos(window, x, y);
+		}
 	}
 	
 	/**
@@ -304,6 +349,38 @@ public class GlfwDisplay implements Display, Disposable {
 		int x = screen.getWidth() / 2 - width / 2;
 		int y = screen.getHeight() / 2 - height / 2;
 		setLocation(x, y);
+	}	
+
+	/**
+	 * Enable vertical synchronization 
+	 * @param enable
+	 */
+	public void setVsync(boolean enable) {
+		setSwapInterval(enable ? 1 : 0);
+	}
+	
+	/**
+	 * <b>From GLFW Documentation:</b><br>
+	 * This function sets the swap interval for the current OpenGL or OpenGL ES context,
+	 * i.e. the number of screen updates to wait from the time glfwSwapBuffers was called
+	 * before swapping the buffers and returning. This is sometimes called vertical
+	 * synchronization, vertical retrace synchronization or just vsync.
+	 * <br><br>
+	 * Contexts that support either of the WGL_EXT_swap_control_tear and
+	 * GLX_EXT_swap_control_tear extensions also accept negative swap intervals, which
+	 * allow the driver to swap even if a frame arrives a little bit late. You can check
+	 * for the presence of these extensions using glfwExtensionSupported.
+	 * For more information about swap tearing, see the extension specifications.
+	 * <br><br>
+	 * A context must be current on the calling thread. Calling this function
+	 * without a current context will cause a GLFW_NO_CURRENT_CONTEXT error.
+	 * <br><br>
+	 * <b>Note:</b> This function does not apply to Vulkan.
+	 * @param interval the minimum number of screen updates to wait for until the buffers are swapped by glfwSwapBuffers.
+	 * @see <a href="http://www.glfw.org/docs/latest/group__context.html#ga6d4e0cdf151b5e579bd67f13202994ed">GLFW 1.3.2 Documentation</a>
+	 */
+	public void setSwapInterval(int interval) {
+		glfwSwapInterval(interval);
 	}
 	
 	/**
@@ -326,8 +403,10 @@ public class GlfwDisplay implements Display, Disposable {
 		this.visible = true;
 		this.screen = screen;
 		
-		glfwSetWindowMonitor(window, screen.getMonitor(), 0, 0,
-				screen.getWidth(), screen.getHeight(), (int) screen.getRefreshRate());
+		if (hasReference()) {
+			glfwSetWindowMonitor(window, screen.getMonitor(), 0, 0,
+					screen.getWidth(), screen.getHeight(), (int) screen.getRefreshRate());
+		}
 	}
 	
 	/**
@@ -347,8 +426,9 @@ public class GlfwDisplay implements Display, Disposable {
 		this.fullscreen = false;
 		this.screen = null;
 		
-		GlfwScreen screen = getScreen();
-		glfwSetWindowMonitor(window, NULL, x, y, width, height, (int) screen.getRefreshRate());
+		if (hasReference()) {
+			glfwSetWindowMonitor(window, NULL, x, y, width, height, GLFW_DONT_CARE);
+		}
 	}
 	
 	/**
@@ -366,10 +446,17 @@ public class GlfwDisplay implements Display, Disposable {
 	public void setVisible(boolean visible) {
 		this.visible = visible;
 		
-		if (visible) {
-			glfwShowWindow(window);
-		} else {
-			glfwHideWindow(window);
+		if (this.visible && !isCreated()) {
+			thread = new Thread(this, getName());
+			thread.start();
+			return;
+		}
+		if (hasReference()) {
+			if (visible) {
+				glfwShowWindow(window);
+			} else {
+				glfwHideWindow(window);
+			}
 		}
 	}
 	
@@ -467,5 +554,73 @@ public class GlfwDisplay implements Display, Disposable {
 			result[i] = new GlfwScreen(buff.get(i));
 		}
 		return result;
+	}
+	
+	private void createWindow() {
+		if (fullscreen) {
+			glfwWindowHint(GLFW_REFRESH_RATE, (int) screen.getRefreshRate());
+			window = glfwCreateWindow(screen.getWidth(), screen.getHeight(), title, screen.getMonitor(), NULL);
+		} else {
+			window = glfwCreateWindow(width, height, title, NULL, NULL);
+		}
+		
+		setupCallbacks();
+		setupLocation();
+		setupProfile();
+		setSizeLimit(minWidth, minHeight, maxWidth, maxHeight);
+		
+		glfwMakeContextCurrent(window);
+		context.make();
+	}
+	
+	private void setupProfile() {
+		if (profile != null) {
+			glfwWindowHint(GLFW_OPENGL_PROFILE, profile.isCompatible() ? GLFW_OPENGL_COMPAT_PROFILE : GLFW_OPENGL_CORE_PROFILE);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, profile.getMajor());
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, profile.getMinor());
+		} else {
+			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+		}
+	}
+	
+	private void setupCallbacks() {
+		glfwSetWindowPosCallback(window,(long window, int x, int y) -> {
+			if (!fullscreen) {
+				this.x = x;
+				this.y = y;
+			}
+		});
+		
+		glfwSetWindowSizeCallback(window, (long window, int w, int h) -> {
+			if (!fullscreen) {
+				this.width = w;
+				this.height = h;
+			}
+			render();
+		});
+	}
+	
+	private void setupLocation() {
+		if (x == -1 && y == -1) {
+			glfwGetWindowPos(window, xpos, ypos);
+			x = xpos.get(0);
+			y = ypos.get(0);	
+		} else {
+			glfwSetWindowPos(window, x, y);
+		}
+	}
+	
+	private boolean hasReference() {
+		return window != NULL;
+	}
+	 
+	private boolean isDisposed() {
+		return disposed;
+	}
+	
+	private boolean isCreated() {
+		return (window != NULL) && (!isDisposed());
 	}
 }

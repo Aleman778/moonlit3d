@@ -16,6 +16,10 @@ public abstract class RenderContext {
 		versionString = "";
 	}
 	
+	public abstract void make();
+	
+	public abstract RenderApi getApi();
+	
 	@Override
 	public String toString() {
 		return "Render Context: " + versionString;

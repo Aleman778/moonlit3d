@@ -6,6 +6,8 @@ package universe.opengl;
  * @see <a href="https://www.khronos.org/opengl/wiki/Core_And_Compatibility_in_Contexts">Khronos Wiki - Core and Compatibility </a>
  */
 public class GLProfile {
+	
+	public static final GLProfile PREFERRED = null;
 
 	/**
 	 * OpenGL 3.3.0 core profile

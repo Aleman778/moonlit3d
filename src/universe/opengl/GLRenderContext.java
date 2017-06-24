@@ -1,11 +1,15 @@
 package universe.opengl;
 
+import universe.app.RenderApi;
 import universe.app.RenderContext;
 
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLCapabilities;
 
 import static org.lwjgl.opengl.GL11.*;
+
+import java.util.jar.JarFile;
 
 public final class GLRenderContext extends RenderContext {
 
@@ -27,14 +31,20 @@ public final class GLRenderContext extends RenderContext {
 	public static final int OPENGL44 = 16;
 	public static final int OPENGL45 = 17;
 	
-	private final GLCapabilities capabilities;
-	private final String extension;
+	private boolean forwardCompatible; 
+	
+	private GLCapabilities capabilities;
+	private String extension;
 	
 	public GLRenderContext() {
 		this(false);
 	}
 	
 	public GLRenderContext(boolean forwardCompatible) {
+		this.forwardCompatible = forwardCompatible;
+	}
+	
+	public void make() {
 		capabilities = GL.createCapabilities(forwardCompatible);
 		
 		if (capabilities.OpenGL45) {
@@ -76,12 +86,19 @@ public final class GLRenderContext extends RenderContext {
 		}
 		
 		versionString = glGetString(GL_VERSION);
-		extension = glGetString(GL_EXTENSIONS);
-		renderer = glGetString(GL_RENDERER);
-		vendor = glGetString(GL_VENDOR);
+		extension     = glGetString(GL_EXTENSIONS);
+		renderer      = glGetString(GL_RENDERER);
+		vendor 	 	  = glGetString(GL_VENDOR);
 		
-		System.out.println("Version (" + version + "): " + versionString);
+		System.out.println("Version: " + version + ", " + versionString);
 	}
 	
+	@Override
+	public RenderApi getApi() {
+		return RenderApi.OPENGL;
+	}
 	
+	public boolean hasExtension(String ext) {
+		return extension.contains(ext);
+	}
 }
