@@ -8,13 +8,10 @@ import universe.util.Disposable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.nio.IntBuffer;
 
 import org.lwjgl.BufferUtils;
 
-import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
@@ -34,6 +31,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	private static final IntBuffer ypos = BufferUtils.createIntBuffer(1);
 	
 	private static boolean initialized = false;
+	private static final int NULL = 0;
 
 	private RenderContext context = new GLRenderContext();
 	private GlfwScreen screen = null;
