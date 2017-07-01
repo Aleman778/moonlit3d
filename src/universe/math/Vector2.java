@@ -1,5 +1,9 @@
 package universe.math;
 
+import java.nio.FloatBuffer;
+
+import universe.util.BufferUtils;
+
 public final class Vector2 {
 
 	/**
@@ -128,5 +132,10 @@ public final class Vector2 {
 		float sy = y - vec.y;
 		
 		return sx * sx + sy * sy;
+	}
+	
+	public FloatBuffer toFloatBuffer() {
+		FloatBuffer result = BufferUtils.createFloatBuffer(x, y);
+		return result;
 	}
 }

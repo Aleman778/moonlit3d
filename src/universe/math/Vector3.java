@@ -1,5 +1,9 @@
 package universe.math;
 
+import java.nio.FloatBuffer;
+
+import universe.util.BufferUtils;
+
 public final class Vector3 {
 
 	/**
@@ -89,5 +93,10 @@ public final class Vector3 {
 	 */
 	public Vector3 scale(float scalar) {
 		return new Vector3(x * scalar, y * scalar, z * scalar);
+	}
+	
+	public FloatBuffer toFloatBuffer() {
+		FloatBuffer result = BufferUtils.createFloatBuffer(x, y, z);
+		return result;
 	}
 }

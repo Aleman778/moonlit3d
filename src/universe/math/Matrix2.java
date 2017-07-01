@@ -1,5 +1,9 @@
 package universe.math;
 
+import java.nio.FloatBuffer;
+
+import universe.util.BufferUtils;
+
 public final class Matrix2 {
 
 	/**
@@ -155,6 +159,11 @@ public final class Matrix2 {
 		}
 		
 		return false;
+	}
+	
+	public FloatBuffer toFloatBuffer() {
+		FloatBuffer result = BufferUtils.createFloatBuffer(m00, m01, m10, m11);
+		return result;
 	}
 	
 	@Override

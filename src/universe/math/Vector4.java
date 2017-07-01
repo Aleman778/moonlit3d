@@ -1,5 +1,9 @@
 package universe.math;
 
+import java.nio.FloatBuffer;
+
+import universe.util.BufferUtils;
+
 public final class Vector4 {
 
 	/**
@@ -84,5 +88,10 @@ public final class Vector4 {
 	 */
 	public Vector4 scale(float scalar) {
 		return new Vector4(x * scalar, y * scalar, z * scalar, w * scalar);
+	}
+	
+	public FloatBuffer toFloatBuffer() {
+		FloatBuffer result = BufferUtils.createFloatBuffer(x, y, z, w);
+		return result;
 	}
 }

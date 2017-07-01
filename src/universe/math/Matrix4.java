@@ -1,5 +1,7 @@
 package universe.math;
 
+import universe.util.BufferUtils;
+
 import java.nio.FloatBuffer;
 
 public final class Matrix4 {
@@ -238,7 +240,7 @@ public final class Matrix4 {
 	 * Get the determinant of the affine transformation matrix.
 	 * @return the determinant of the affine transformation matrix
 	 */
-	private float determinantAffine() {
+	public float determinantAffine() {
 		return m00 * (m11 * m22 - m12 * m21)
 			 - m01 * (m10 * m22 - m12 * m20)
 			 + m02 * (m10 * m21 - m11 * m20);
@@ -328,14 +330,7 @@ public final class Matrix4 {
 		}
 		return false;
 	}
-
-	@Override
-	public String toString() {
-		return String.format(
-				"Matrix4: [%.3f %.3f %.3f %.3f]\n%9s[%.3f %.3f %.3f %.3f]\n%9s[%.3f %.3f %.3f %.3f]\n%9s[%.3f %.3f %.3f %.3f]",
-				m00, m01, m02, m03, "", m10, m11, m12, m13, "", m20, m21, m22, m23, "", m30, m31, m32, m33);
-	}
-
+	
 	public float[] toArray() {
 		float[] result = new float[16];
 		result[0]  = m00;
@@ -355,5 +350,20 @@ public final class Matrix4 {
 		result[14] = m32;
 		result[15] = m33;
 		return result;
+	}
+	
+	public FloatBuffer toFloatBuffer() {
+		FloatBuffer result = BufferUtils.createFloatBuffer(m00, m01, m02, m03,
+														   m10, m11, m12, m13,
+														   m20, m21, m22, m23,
+														   m30, m31, m32, m33);
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				"Matrix4: [%.3f %.3f %.3f %.3f]\n%9s[%.3f %.3f %.3f %.3f]\n%9s[%.3f %.3f %.3f %.3f]\n%9s[%.3f %.3f %.3f %.3f]",
+				m00, m01, m02, m03, "", m10, m11, m12, m13, "", m20, m21, m22, m23, "", m30, m31, m32, m33);
 	}
 }
