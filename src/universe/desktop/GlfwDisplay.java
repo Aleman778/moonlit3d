@@ -1,16 +1,19 @@
 package universe.desktop;
 
 import universe.app.*;
+import universe.graphics.Renderer;
 import universe.opengl.GLProfile;
-import universe.opengl.GLRenderContext;
+import universe.opengl.GLRenderer;
 import universe.util.Disposable;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWWindowPosCallback;
+import org.lwjgl.glfw.GLFWWindowSizeCallback;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.BufferUtils;
 
 import java.nio.IntBuffer;
-
-import org.lwjgl.BufferUtils;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -31,9 +34,13 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	private static final IntBuffer ypos = BufferUtils.createIntBuffer(1);
 	
 	private static boolean initialized = false;
-	private static final int NULL = 0;
+	private static final long NULL = 0L;
 
-	private RenderContext context = new GLRenderContext();
+	private GLFWWindowPosCallback posCallback;
+	private GLFWWindowSizeCallback sizeCallback;
+
+	private Object lock = new Object();
+	private Renderer renderer = new GLRenderer();
 	private GlfwScreen screen = null;
 	private GLProfile profile = null;
 	private Thread thread;
@@ -119,31 +126,61 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	@Override
 	public final void run() {
 		createWindow();
-		execSetup();
-		loop();
+		
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				renderLoop();
+			}
+		}).start();
+
+		eventLoop();
 	}
 	
-	private void loop() {
+	private void eventLoop() {
 		while (!isClosed()) {
-			refresh();
+			glfwWaitEvents();
+			
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private void renderLoop() {
+		glfwMakeContextCurrent(window);
+		GL.createCapabilities();
+		execSetup();
+		
+		while (!isClosed()) {
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			
 			render();
 			
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			synchronized (lock) {
+				if (hasReference()) {
+					glfwSwapBuffers(window);
+				}
 			}
 		}
 	}
 
 	/**
-	 * Destroys the window and its contexts.
+	 * Destroys the window and free its contexts.
 	 */
 	@Override
 	public void dispose() {
 		glfwDestroyWindow(window);
+		posCallback.free();
+		sizeCallback.free();
+		
 		disposed = true;
 		visible = false;
 	}
@@ -169,11 +206,10 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 		
 		switch (renderer) {
 		case OPENGL: case PREFERRED:
-			context = new GLRenderContext();
+			this.renderer = new GLRenderer();
 			break;
-			
 		default:
-			throw new IllegalStateException("Unsupported rendering api: " + renderer.getName());
+			
 		}
 	}
 	
@@ -186,7 +222,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	 */
 	public void setProfile(GLProfile profile) {
 		if (isActive()) {
-			throw new IllegalStateException("The OpenGL Profile has to be set before ");
+			throw new IllegalStateException("The OpenGL Profile cannot be set when window is active.");
 		}
 		
 		this.profile = profile;
@@ -449,6 +485,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 			thread.start();
 			return;
 		}
+		
 		if (hasReference()) {
 			if (visible) {
 				glfwShowWindow(window);
@@ -566,9 +603,6 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 		setupLocation();
 		setupProfile();
 		setSizeLimit(minWidth, minHeight, maxWidth, maxHeight);
-		
-		glfwMakeContextCurrent(window);
-		context.make();
 	}
 	
 	private void setupProfile() {
@@ -584,7 +618,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	}
 	
 	private void setupCallbacks() {
-		glfwSetWindowPosCallback(window,(long window, int x, int y) -> {
+		GLFWWindowPosCallback poscallback = glfwSetWindowPosCallback(window,(long window, int x, int y) -> {
 			if (!fullscreen) {
 				this.x = x;
 				this.y = y;
@@ -596,7 +630,6 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 				this.width = w;
 				this.height = h;
 			}
-			render();
 		});
 	}
 	

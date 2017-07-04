@@ -4,12 +4,9 @@ import universe.app.RenderApi;
 import universe.app.RenderContext;
 
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLCapabilities;
 
 import static org.lwjgl.opengl.GL11.*;
-
-import java.util.jar.JarFile;
 
 public final class GLRenderContext extends RenderContext {
 

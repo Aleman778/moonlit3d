@@ -143,7 +143,7 @@ public class Quaternion {
         this.w = w;
     }
     
-    public Matrix4 toMatrix() {
+    public Matrix4 toMatrix4() {
     	Matrix4 result = new Matrix4();
     	float xSq = x * x;
     	float ySq = y * y;

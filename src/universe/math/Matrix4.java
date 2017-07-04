@@ -136,6 +136,7 @@ public final class Matrix4 {
 
 		return result;
 	}
+	
 
 	/**
 	 * Matrix4 by Matrix4 addition operation.<br>

@@ -7,7 +7,7 @@ import static org.lwjgl.opengl.GL45.*;
 public class GLException extends IllegalStateException {
 
 	private static final long serialVersionUID = -2266850507182986123L;
-
+	
 	public GLException(int errcode) {
 		super(getErrorMessage(errcode));
 	}

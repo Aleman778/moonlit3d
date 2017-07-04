@@ -6,7 +6,7 @@ package universe.app;
  * @since 1.0
  * @author Aleman778
  */
-public abstract class Display extends SceneNode {
+public abstract class Display extends NodeObject {
 	
 	/**
 	 * The refresh method is used to provide support for

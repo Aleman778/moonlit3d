@@ -35,31 +35,6 @@ public final class Color {
 		this.alpha = alpha;
 	}
 
-	public static Color rgb(int red, int green, int blue) {
-		return rgba(red, green, blue, 1.0f);
-	}
-
-	public static Color rgba(int red, int green, int blue, float alpha) {
-		if (red < 0 || red > 255) {
-			throw new IllegalArgumentException(
-					"The red color component (" + red + ") expects a color value from 0 to 255.");
-		}
-		if (green < 0 || green > 255) {
-			throw new IllegalArgumentException(
-					"The green color component (" + green + ") expects a color value from 0 to 255.");
-		}
-		if (blue < 0 || blue > 255) {
-			throw new IllegalArgumentException(
-					"The green color component (" + blue + ") expects a color value from 0 to 255.");
-		}
-		if (alpha < 0 || alpha > 1) {
-			throw new IllegalArgumentException(
-					"The green color component (" + alpha + ") expects a color value from 0 to 1.");
-		}
-
-		return new Color(red / 255f, green / 255f, blue / 255f, alpha);
-	}
-
 	public static Color color(float red, float green, float blue) {
 		return new Color(red, green, blue);
 	}
@@ -68,13 +43,110 @@ public final class Color {
 		return new Color(red, green, blue, alpha);
 	}
 
+	public static Color rgb(int red, int green, int blue) {
+		return rgba(red, green, blue, 1.0f);
+	}
+
+	public static Color rgba(int red, int green, int blue, float alpha) {
+		if (red < 0 || red > 255) {
+			throw new IllegalArgumentException(
+					"The red color component (" + red + ") expects a value from 0 to 255.");
+		}
+		if (green < 0 || green > 255) {
+			throw new IllegalArgumentException(
+					"The green color component (" + green + ") expects a value from 0 to 255.");
+		}
+		if (blue < 0 || blue > 255) {
+			throw new IllegalArgumentException(
+					"The blue color component (" + blue + ") expects a value from 0 to 255.");
+		}
+		if (alpha < 0 || alpha > 1) {
+			throw new IllegalArgumentException(
+					"The alpha color component (" + alpha + ") expects a value from 0 to 1.");
+		}
+
+		return new Color(red / 255f, green / 255f, blue / 255f, alpha);
+	}
+	
+	public static Color hsl(int hue, float saturation, float lightness) {
+		return hsl(hue, saturation, lightness, 1.0f);
+	}
+	
+	public static Color hsl(int hue, float saturation, float lightness, float alpha) {
+		if (hue < 0 || hue > 360) {
+			throw new IllegalArgumentException(
+					"The hue color component (" + hue + ") expects a value from 0 to 360.");
+		}
+		if (saturation < 0 || saturation > 1) {
+			throw new IllegalArgumentException(
+					"The saturation color component (" + saturation + ") expects a value from 0 to 1.");
+		}
+		if (lightness < 0 || lightness > 1) {
+			throw new IllegalArgumentException(
+					"The lightness color component (" + lightness + ") expects a value from 0 to 1.");
+		}
+		if (alpha < 0 || alpha > 1) {
+			throw new IllegalArgumentException(
+					"The alpha color component (" + alpha + ") expects a value from 0 to 1.");
+		}
+		
+		float[] data = HSLtoRGB(hue, saturation, lightness);
+		return new Color(data[0], data[1], data[2], alpha);
+	}
+	
+	private static float[] HSLtoRGB(int hue, float saturation, float lightness) {
+		float red, green, blue;
+		
+		if (saturation == 0) {
+			red = green = blue = lightness; // Achromatic
+		} else {
+			float c = (1 - Math.abs(2 * lightness - 1)) * saturation;
+			float h = hue / 60.0f;
+			float x = c * (1 - Math.abs(h % 2 - 1));
+			float m = lightness - 0.5f * c;
+			
+			switch ((int) h) {
+			case 0:
+				red = c + m; green = x + m; blue = m;
+				break;
+			case 1:
+				red = x + m; green = c + m; blue = m;
+				break;
+			case 2:
+				red = m; green = c + m; blue = x + m;
+				break;
+			case 3:
+				red = m; green = x + m; blue = c + m;
+				break;
+			case 4:
+				red = x + m; green = m; blue = c + m;
+				break;
+			case 5:
+				red = c + m; green = m; blue = x + m;
+				break;
+			default:
+				red = m; green = m; blue = m;
+			}
+		}
+		
+		return new float[] {red, green, blue}; 
+	}
+
 	public static Color web(String color) {
-		String data = color.toLowerCase();
+		String data = color.toLowerCase().trim();
 
 		if (data.startsWith("#")) {
 			return parseHex(data.substring(1));
 		} else if (data.startsWith("0x")) {
 			return parseHex(data.substring(2));
+		} else if (data.startsWith("rgba")) {
+			return parseRGB(data.substring(5, data.length() - 1), true);
+		} else if (data.startsWith("rgb")) {
+			return parseRGB(data.substring(4, data.length() - 1), false);
+		} else if (data.startsWith("hsla")) {
+			return parseHSL(data.substring(5, data.length() - 1), true);
+		} else if (data.startsWith("hsl")) {
+			return parseHSL(data.substring(4, data.length() - 1), false);
 		} else {
 			return ColorMap.get(color);
 		}
@@ -89,19 +161,19 @@ public final class Color {
 				red = Integer.parseInt(hex.substring(0, 1));
 				green = Integer.parseInt(hex.substring(1, 2));
 				blue = Integer.parseInt(hex.substring(2, 3));
-				return new Color(red / 15f, green / 15f, blue / 15f, 1.0f);
+				return Color.color(red / 15f, green / 15f, blue / 15f, 1.0f);
 			} else if (len == 4) {
 				red = Integer.parseInt(hex.substring(0, 1));
 				green = Integer.parseInt(hex.substring(1, 2));
 				blue = Integer.parseInt(hex.substring(2, 3));
 				alpha = Integer.parseInt(hex.substring(3, 4));
-				return new Color(red / 15f, green / 15f, blue / 15f, alpha / 15f);
+				return Color.color(red / 15f, green / 15f, blue / 15f, alpha / 15f);
 			} else if (len == 6) {
 				red = Integer.parseInt(hex.substring(0, 2), 16);
 				green = Integer.parseInt(hex.substring(2, 4), 16);
 				blue = Integer.parseInt(hex.substring(4, 6), 16);
 				alpha = 255;
-				return new Color(red, green, blue, alpha / 255f);
+				return Color.rgba(red, green, blue, alpha / 255f);
 			} else if (len == 8) {
 				red = Integer.parseInt(hex.substring(0, 2), 16);
 				green = Integer.parseInt(hex.substring(2, 4), 16);
@@ -113,7 +185,72 @@ public final class Color {
 		} catch (NumberFormatException e) {
 		}
 
-		throw new IllegalArgumentException("Invalid hexadecimal color specification (" + hex + ")");
+		throw new IllegalArgumentException("Invalid hexadecimal color specification (" + hex + ").");
+	}
+	
+	private static Color parseRGB(String rgb, boolean hasAlpha) {
+		try {
+			int red = 0, green = 0, blue = 0;
+			float alpha = 1.0f;
+			
+			String[] data = rgb.split(",");
+			red   = (int) parseComponent(data[0].trim(), COMPONENT);
+			green = (int) parseComponent(data[1].trim(), COMPONENT);
+			blue  = (int) parseComponent(data[2].trim(), COMPONENT);
+			if (hasAlpha) {
+				alpha = parseComponent(data[3].trim(), ALPHA);
+			}
+			
+			return Color.rgba(red, green, blue, alpha);
+		} catch (NumberFormatException | NullPointerException e) {
+		}
+		
+		throw new IllegalArgumentException("Invalid rgb color specification (" + rgb + ").");
+	}
+	
+	private static Color parseHSL(String hsl, boolean hasAlpha) {
+		try {
+			int hue = 0;
+			float saturation= 0, lightness = 0, alpha = 1.0f;
+			
+			String[] data = hsl.split(",");
+			hue 	   = (int) parseComponent(data[0].trim(), ANGLE);
+			saturation =       parseComponent(data[1].trim(), PERCENT);
+			lightness  =       parseComponent(data[2].trim(), PERCENT);
+			if (hasAlpha) {
+				alpha = parseComponent(data[3].trim(), ALPHA);
+			}
+			
+			return Color.hsl(hue, saturation, lightness, alpha);
+		} catch (NumberFormatException | NullPointerException e) {
+		}
+		
+		throw new IllegalArgumentException("Invalid rgb color specification (" + hsl + ").");
+	}
+	
+	private static final int COMPONENT = 0;
+	private static final int PERCENT   = 1;
+	private static final int ANGLE     = 2;
+	private static final int ALPHA     = 3;
+	
+	private static float parseComponent(String component, int type) {
+		if (type == COMPONENT) {
+			if (component.endsWith("%")) {
+				return Integer.parseInt(component.substring(0, component.length() - 1)) * 2.55f;
+			} else {
+				return Integer.parseInt(component);
+			}
+		} else if (type == PERCENT) {
+			if (!component.endsWith("%")) {
+				throw new NumberFormatException();
+			}
+
+			return Integer.parseInt(component.substring(0, component.length() - 1)) / 100.0f;
+		} else if (type == ANGLE) {
+			return Integer.parseInt(component);
+		} else {
+			return Float.parseFloat(component);
+		}
 	}
 	
 	public float getRed() {
@@ -150,7 +287,7 @@ public final class Color {
 	
 	@Override
 	public String toString() {
-		return "Color: red(" + red + "), green(" + green + "), blue(" + blue + "), alpha(" + alpha + ")";
+		return "Color: red(" + red + "), green(" + green + "), blue(" + blue + "), alpha(" + alpha + ").";
 	}
 
 	/**
@@ -898,7 +1035,10 @@ public final class Color {
 		private static final HashMap<String, Color> colors = initColors();
 		
 		private static Color get(String name) {
-			return colors.get(name);
+			Color color = colors.get(name);
+			if (color == null)
+				throw new IllegalArgumentException("Invalid html standard color name (" + name + ").");
+			return color;
 		}
 
 		private static HashMap<String, Color> initColors() {
