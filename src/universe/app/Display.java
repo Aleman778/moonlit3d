@@ -19,6 +19,26 @@ public abstract class Display extends NodeObject {
 	 * @param renderer
 	 */
 	public abstract void setRenderer(RenderApi renderer);
+	
+	/**
+	 * Get the width (in pixels) of the display.
+	 * @return the width of the display
+	 */
+	public abstract int getWidth();
+	
+	/**
+	 * Get the height (in pixels) of the display.
+	 * @return the height of the display
+	 */
+	public abstract int getHeight();
+	
+	/**
+	 * Get the aspect ratio (width / height) of the display
+	 * @return the aspect ratio of the display
+	 */
+	public final float getAspectRatio() {
+		return (float) getWidth() / (float) getHeight();
+	}
 
 	/**
 	 * Get the primary screen information object.
