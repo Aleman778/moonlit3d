@@ -143,7 +143,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 			glfwWaitEvents();
 			
 			try {
-				Thread.sleep(1);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -157,7 +157,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 		
 		while (!isClosed()) {
 			try {
-				Thread.sleep(1);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -268,6 +268,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	 * Get the width of the window.
 	 * @return the window width
 	 */
+	@Override
 	public int getWidth() {
 		if (screen != null) {
 			return screen.getWidth();
@@ -280,6 +281,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	 * Get the height of the window.
 	 * @return the window height
 	 */
+	@Override
 	public int getHeight() {
 		if (screen != null) {
 			return screen.getHeight();
@@ -430,13 +432,14 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	 * @param screen the screen to use
 	 */
 	public void setFullscreenMode(GlfwScreen screen) {
-		if (this.fullscreen) {
+		if (this.fullscreen && this.screen.equals(screen)) {
 			return;
 		}
-		this.fullscreen = true;
-		this.visible = true;
-		this.screen = screen;
 		
+		this.fullscreen = true;
+		this.screen = screen;
+
+		System.out.println("Has reference " + hasReference());
 		if (hasReference()) {
 			glfwSetWindowMonitor(window, screen.getMonitor(), 0, 0,
 					screen.getWidth(), screen.getHeight(), (int) screen.getRefreshRate());
@@ -593,9 +596,11 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	
 	private void createWindow() {
 		if (fullscreen) {
+			System.out.println("FULLSCREEN");
 			glfwWindowHint(GLFW_REFRESH_RATE, (int) screen.getRefreshRate());
 			window = glfwCreateWindow(screen.getWidth(), screen.getHeight(), title, screen.getMonitor(), NULL);
 		} else {
+			System.out.println("NOT FULLSCREEN");
 			window = glfwCreateWindow(width, height, title, NULL, NULL);
 		}
 		
