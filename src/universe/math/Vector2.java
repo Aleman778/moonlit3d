@@ -34,6 +34,15 @@ public final class Vector2 {
 	}
 	
 	/**
+	 * Constructor used to create a new copy of the provided vector.
+	 * @param copy the vector to copy from
+	 */
+	public Vector2(Vector2 copy) {
+		this.x = copy.x;
+		this.y = copy.y;
+	}
+	
+	/**
 	 * Vector2 by Vector2 addition operation.<br>
 	 * <b>Operation description:</b><br>
 	 * <code>returnVector = thisVector + parameterVector;</code>
@@ -73,7 +82,7 @@ public final class Vector2 {
 	 * @param scalar the scaling (or dilation) amount
 	 * @return the new scaled vector
 	 */
-	public Vector2 scale(float scalar) {
+	public Vector2 mul(float scalar) {
 		return new Vector2(x * scalar, y * scalar);
 	}
 	

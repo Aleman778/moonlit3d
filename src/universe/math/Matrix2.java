@@ -35,7 +35,17 @@ public final class Matrix2 {
 		this.m01 = m01;
 		this.m10 = m10;
 		this.m11 = m11;
-		
+	}
+	
+	/**
+	 * Constructor used to create a new copy of the provided matrix.
+	 * @param copy the matrix to copy from
+	 */
+	public Matrix2(Matrix2 copy) {
+		this.m00 = copy.m00;
+		this.m01 = copy.m01;
+		this.m10 = copy.m10;
+		this.m11 = copy.m11;
 	}
 	
 	public static final Matrix2 rotation(float angle) {
@@ -47,7 +57,7 @@ public final class Matrix2 {
 		
 		return result;
 	}
-
+	
 	public static final Matrix2 scale(float x, float y) {
 		Matrix2 result = new Matrix2();
 		result.m00 = x;
@@ -55,7 +65,7 @@ public final class Matrix2 {
 		
 		return result;
 	}
-
+	
 	/**
 	 * Matrix2 by Matrix2 addition operation.<br>
 	 * <b>Operation description:</b><br>
@@ -72,6 +82,23 @@ public final class Matrix2 {
 		
 		return result;
 	}
+	
+	/**
+	 * Matrix2 by Matrix2 multiplication.<br>
+	 * <b>Operation description:</b><br>
+	 * <code>returnMatrix = thisMatrix * parameterMatrix;</code>
+	 * @param right the right operand matrix to multiply by
+	 * @return the new resulting matrix from multiplication 
+	 */
+	public Matrix2 mul(Matrix2 right) {
+		Matrix2 result = new Matrix2();
+		result.m00 = this.m00 * right.m00 + this.m10 * right.m01;
+		result.m01 = this.m01 * right.m00 + this.m11 * right.m01;
+		result.m10 = this.m00 * right.m10 + this.m10 * right.m11;
+		result.m11 = this.m01 * right.m10 + this.m11 * right.m11;
+		
+		return result;
+	}
 
 	/**
 	 * Matrix2 by Scalar scaling operation.<br>
@@ -80,7 +107,7 @@ public final class Matrix2 {
 	 * @param scalar the scaling amount
 	 * @return the new matrix containing the addition of the two matrices
 	 */
-	public Matrix2 scale(float scalar) {
+	public Matrix2 mul(float scalar) {
 		Matrix2 result = new Matrix2();
 		result.m00 = m00 * scalar;
 		result.m01 = m01 * scalar;

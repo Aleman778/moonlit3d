@@ -41,6 +41,16 @@ public final class Vector3 {
 	}
 	
 	/**
+	 * Constructor used to create a new copy of the provided vector.
+	 * @param copy the vector to copy from
+	 */
+	public Vector3(Vector3 copy) {
+		this.x = copy.x;
+		this.y = copy.y;
+		this.z = copy.z;
+	}
+	
+	/**
 	 * Vector3 by Vector3 addition operation.<br>
 	 * <b>Operation description:</b><br>
 	 * <code>returnVector = thisVector + parameterVector;</code>
@@ -91,7 +101,7 @@ public final class Vector3 {
 	 * @param scalar the scaling (or dilation) amount
 	 * @return the new scaled vector
 	 */
-	public Vector3 scale(float scalar) {
+	public Vector3 mul(float scalar) {
 		return new Vector3(x * scalar, y * scalar, z * scalar);
 	}
 	

@@ -56,6 +56,22 @@ public final class Matrix3 {
 	}
 	
 	/**
+	 * Constructor used to create a new copy of the provided matrix.
+	 * @param copy the matrix to copy from
+	 */
+	public Matrix3(Matrix3 copy) {
+		this.m00 = copy.m00;
+		this.m01 = copy.m01;
+		this.m02 = copy.m02;
+		this.m10 = copy.m10;
+		this.m11 = copy.m11;
+		this.m12 = copy.m12;
+		this.m20 = copy.m20;
+		this.m21 = copy.m21;
+		this.m22 = copy.m22;
+	}
+	
+	/**
 	 * Constructor.
 	 * @param entries float array containing at least 9 elements
 	 */
@@ -156,6 +172,28 @@ public final class Matrix3 {
 		
 		return result;
 	}
+	
+	/**
+	 * Matrix3 by Matrix3 multiplication.<br>
+	 * <b>Operation description:</b><br>
+	 * <code>returnMatrix = thisMatrix * parameterMatrix;</code>
+	 * @param right the right operand matrix to multiply by
+	 * @return the new resulting matrix from multiplication 
+	 */
+	public Matrix3 mul(Matrix3 right) {
+		Matrix3 result = new Matrix3();
+		result.m00 = this.m00 * right.m00 + this.m10 * right.m01 + this.m20 * right.m02;
+		result.m01 = this.m01 * right.m00 + this.m11 * right.m01 + this.m21 * right.m02;                                                                            
+		result.m02 = this.m02 * right.m00 + this.m12 * right.m01 + this.m22 * right.m02;
+		result.m10 = this.m00 * right.m10 + this.m10 * right.m11 + this.m20 * right.m12;
+		result.m11 = this.m01 * right.m10 + this.m11 * right.m11 + this.m21 * right.m12;                                                             
+		result.m12 = this.m02 * right.m10 + this.m12 * right.m11 + this.m22 * right.m12;
+		result.m20 = this.m00 * right.m20 + this.m10 * right.m21 + this.m20 * right.m22;
+		result.m21 = this.m01 * right.m20 + this.m11 * right.m21 + this.m21 * right.m22;
+		result.m22 = this.m02 * right.m20 + this.m11 * right.m21 + this.m22 * right.m22;
+		
+		return result;
+	}
 
 	/**
 	 * Matrix3 by Scalar scaling operation.<br>
@@ -164,7 +202,7 @@ public final class Matrix3 {
 	 * @param scalar the scaling amount
 	 * @return the new matrix containing the addition of the two matrices
 	 */
-	public Matrix3 scale(float scalar) {
+	public Matrix3 mul(float scalar) {
 		Matrix3 result = new Matrix3();
 		result.m00 = m00 + scalar;
 		result.m01 = m01 + scalar;

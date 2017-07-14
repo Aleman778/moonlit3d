@@ -4,6 +4,8 @@ import universe.util.BufferUtils;
 
 import java.nio.FloatBuffer;
 
+import static java.lang.Math.*;
+
 public final class Matrix4 {
 	/**
 	 * Matrix entry.
@@ -77,6 +79,29 @@ public final class Matrix4 {
 		this.m32 = m32;
 		this.m33 = m33;
 	}
+	
+	/**
+	 * Constructor used to create a new copy of the provided matrix.
+	 * @param copy the matrix to copy from
+	 */
+	public Matrix4(Matrix4 copy) {
+		this.m00 = copy.m00;
+		this.m01 = copy.m01;
+		this.m02 = copy.m02;
+		this.m03 = copy.m03;
+		this.m10 = copy.m10;
+		this.m11 = copy.m11;
+		this.m12 = copy.m12;
+		this.m13 = copy.m13;
+		this.m20 = copy.m20;
+		this.m21 = copy.m21;
+		this.m22 = copy.m22;
+		this.m23 = copy.m23;
+		this.m30 = copy.m30;
+		this.m31 = copy.m31;
+		this.m32 = copy.m32;
+		this.m33 = copy.m33;
+	}
 
 	/**
 	 * Constructor.
@@ -107,6 +132,10 @@ public final class Matrix4 {
 		this.m33 = entries[15];
 	}
 
+	/**
+	 * Identity matrix.
+	 * @return 
+	 */
 	public static final Matrix4 identity() {
 		Matrix4 result = new Matrix4();
 		result.m00 = 1;
@@ -117,23 +146,111 @@ public final class Matrix4 {
 	}
 
 	/**
-	 * Rotation in 3 dimensions.
-	 * 
-	 * @return the standard matrix for the rotation
+	 * Transformation matrix performs a translation operation.
+	 * @param vec the vector components x, y, z position of the translation
+	 * @return new translation matrix
 	 */
-	public static final Matrix4 rotation(float angle) {
-		Matrix4 result = Matrix4.identity();
+	public static final Matrix4 translation(Vector3 vec) {
+		return translation(vec.x, vec.y, vec.z);
+	}
+	
+	/**
+	 * Transformation matrix performs a translation operation.
+	 * @param x the x position of the translation
+	 * @param y the y position of the translation
+	 * @param z the z position of the translation
+	 * @return new translation matrix
+	 */
+	public static final Matrix4 translation(float x, float y, float z) {
+		Matrix4 result = new Matrix4();
+		result.m30 = x;
+		result.m31 = y;
+		result.m32 = z;
 		
+		return result;
+	}
+	
+	/**
+	 * Transformation matrix performs a rotation by the 
+	 * provided euler angles x, y, z, in degrees.
+	 * @param x the angle of the pitch
+	 * @param y the angle of the yaw
+	 * @param z the angle of the roll
+	 * @return new rotation matrix
+	 */
+	public static final Matrix4 rotation(float x, float y, float z) {
+		Matrix4 result = new Matrix4();
+		x = (float) Math.toRadians(x);
+		y = (float) Math.toRadians(y);
+		z = (float) Math.toRadians(z);
+		
+		result.m00 = (float) ( cos(y) * cos(z));
+		result.m01 = (float) ( cos(x) * sin(z) + sin(x) * sin(y) * cos(z));
+		result.m02 = (float) ( sin(x) * sin(z) - cos(x) * sin(y) * cos(z));
+		result.m10 = (float) (-cos(y) * sin(z));
+		result.m11 = (float) ( cos(x) * cos(z) - sin(x) * sin(y) * sin(z));
+		result.m12 = (float) ( sin(x) * cos(z) + cos(x) * sin(y) * sin(z));
+		result.m20 = (float) ( sin(y));
+		result.m21 = (float) (-sin(x) * cos(y));
+		result.m22 = (float) ( cos(x) * cos(y));
 
 		return result;
 	}
+	
+	/**
+	 * Transformation matrix performs a rotation by the provided angle
+	 * and about the provided x, y and z axis.
+	 * @return new rotation matrix
+	 */
+	public static final Matrix4 rotation(float angle, float x, float y, float z) {
+		return rotation(angle, new Vector3(x, y, z));
+	}
+	
+	/**
+	 * Transformation matrix performs a rotation by the provided angle
+	 * (in degrees) and about the provided axis.
+	 * @return new rotation matrix
+	 */
+	public static final Matrix4 rotation(float angle, Vector3 axis) {
+		return Quaternion.rotation(axis, angle).toMatrix4();
+	}
 
+	/**
+	 * Transformation matrix performs a rotation operation by the
+	 * provided quaternion.
+	 * @return new rotation matrix
+	 */
+	public static final Matrix4 rotation(Quaternion quat) {
+		return quat.toMatrix4();
+	}
+
+	/**
+	 * Transformation matrix performs a scale operation by the
+	 * amount in the provided axes x, y and z.
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @return
+	 */
 	public static final Matrix4 scale(float x, float y, float z) {
 		Matrix4 result = new Matrix4();
 		result.m00 = x;
 		result.m11 = y;
 		result.m22 = z;
 
+		return result;
+	}
+	
+	public static final Matrix4 projection(float fov, float aspectRatio, float near, float far) {
+		Matrix4 result = new Matrix4();
+		float angle = (float) Math.tan(Math.toRadians(fov / 2.0f));
+		float range = near - far;
+		
+		result.m00 = 1.0f / (angle * aspectRatio);
+		result.m11 = 1.0f / angle;
+		result.m22 = (-near - far) / range;
+		result.m23 = 2.0f * far * near / range;
+				
 		return result;
 	}
 	
@@ -169,6 +286,35 @@ public final class Matrix4 {
 	}
 
 	/**
+	 * Matrix3 by Matrix3 multiplication.<br>
+	 * <b>Operation description:</b><br>
+	 * <code>returnMatrix = thisMatrix * parameterMatrix;</code>
+	 * @param right the right operand matrix to multiply by
+	 * @return the new resulting matrix from multiplication 
+	 */
+	public Matrix4 mul(Matrix4 right) {
+		Matrix4 result = new Matrix4();
+		result.m00 = this.m00 * right.m00 + this.m10 * right.m01 + this.m20 * right.m02 + this.m30 * right.m03;
+		result.m01 = this.m01 * right.m00 + this.m11 * right.m01 + this.m21 * right.m02 + this.m31 * right.m03;                                                                            
+		result.m02 = this.m02 * right.m00 + this.m12 * right.m01 + this.m22 * right.m02 + this.m32 * right.m03;                                                                          
+		result.m03 = this.m03 * right.m00 + this.m13 * right.m01 + this.m23 * right.m02 + this.m33 * right.m03;
+		result.m10 = this.m00 * right.m10 + this.m10 * right.m11 + this.m20 * right.m12 + this.m30 * right.m13;
+		result.m11 = this.m01 * right.m10 + this.m11 * right.m11 + this.m21 * right.m12 + this.m31 * right.m13;                                                             
+		result.m12 = this.m02 * right.m10 + this.m12 * right.m11 + this.m22 * right.m12 + this.m32 * right.m13;                                                            
+		result.m13 = this.m03 * right.m10 + this.m13 * right.m11 + this.m23 * right.m12 + this.m33 * right.m13;
+		result.m20 = this.m00 * right.m20 + this.m10 * right.m21 + this.m20 * right.m22 + this.m30 * right.m23;
+		result.m21 = this.m01 * right.m20 + this.m11 * right.m21 + this.m21 * right.m22 + this.m31 * right.m23;
+		result.m22 = this.m02 * right.m20 + this.m12 * right.m21 + this.m22 * right.m22 + this.m32 * right.m23;
+		result.m23 = this.m03 * right.m20 + this.m13 * right.m21 + this.m23 * right.m22 + this.m33 * right.m23;
+		result.m30 = this.m00 * right.m30 + this.m10 * right.m31 + this.m20 * right.m32 + this.m30 * right.m33;
+		result.m31 = this.m01 * right.m30 + this.m11 * right.m31 + this.m21 * right.m32 + this.m31 * right.m33;
+		result.m32 = this.m02 * right.m30 + this.m12 * right.m31 + this.m22 * right.m32 + this.m32 * right.m33;
+		result.m33 = this.m03 * right.m30 + this.m13 * right.m31 + this.m23 * right.m32 + this.m33 * right.m33;
+		
+		return result;
+	}
+
+	/**
 	 * Matrix4 by Scalar scaling operation.<br>
 	 * <b>Operation description:</b><br>
 	 * <code>returnMatrix = thisMatrix * parameterScalar;</code>
@@ -176,7 +322,7 @@ public final class Matrix4 {
 	 * @param scalar the scaling amount
 	 * @return the new matrix containing the addition of the two matrices
 	 */
-	public Matrix4 scale(float scalar) {
+	public Matrix4 mul(float scalar) {
 		Matrix4 result = new Matrix4();
 		result.m00 = m00 + scalar;
 		result.m01 = m01 + scalar;
@@ -292,6 +438,14 @@ public final class Matrix4 {
         result.m33 = ( m20 * x3  - m21 * x1  + m22 * x0) * reciprocal;
 
 		return result;
+	}	
+	
+	public Matrix4 translate(float x, float y, float z) {
+		return mul(translation(x, y, z));
+	}
+	
+	public Matrix4 translate(Vector3 vector) {
+		return mul(translation(vector));
 	}
 
 	/**

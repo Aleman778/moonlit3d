@@ -47,6 +47,17 @@ public final class Vector4 {
 	}
 	
 	/**
+	 * Constructor used to create a new copy of the provided vector.
+	 * @param copy the vector to copy from
+	 */
+	public Vector4(Vector4 copy) {
+		this.x = copy.x;
+		this.y = copy.y;
+		this.z = copy.z;
+		this.w = copy.w;
+	}
+	
+	/**
 	 * Vector4 by Vector4 addition operation.<br>
 	 * <b>Operation description:</b><br>
 	 * <code>returnVector = thisVector + parameterVector;</code>
@@ -86,7 +97,7 @@ public final class Vector4 {
 	 * @param scalar the scaling (or dilation) amount
 	 * @return the new scaled vector
 	 */
-	public Vector4 scale(float scalar) {
+	public Vector4 mul(float scalar) {
 		return new Vector4(x * scalar, y * scalar, z * scalar, w * scalar);
 	}
 	

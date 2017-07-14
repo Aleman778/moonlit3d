@@ -45,10 +45,9 @@ public class Quaternion {
     }
     
     /**
-     * Constructor.
-     * Copy a specific quaternion from the provided argument.
-     * @param quat the quaternion to copy from
-     */
+	 * Constructor used to create a new copy of the provided quaternion.
+	 * @param copy the quaternion to copy from
+	 */
     public Quaternion(Quaternion quat) {
         set(quat.x, quat.y, quat.z, quat.w);
     }
@@ -77,18 +76,18 @@ public class Quaternion {
      */
     public static Quaternion eulerRad(float x, float y, float z) {
     	Quaternion result = new Quaternion();
-    	
-        float sx = (float) Math.sin(x * 0.5f);
-        float cx = (float) Math.cos(x * 0.5f);
-        float sy = (float) Math.sin(y * 0.5f);
-        float cy = (float) Math.cos(y * 0.5f);
-        float sz = (float) Math.sin(z * 0.5f);
-        float cz = (float) Math.cos(z * 0.5f);
+
+        float sinx = (float) Math.sin(x * 0.5f);
+        float cosx = (float) Math.cos(x * 0.5f);
+        float siny = (float) Math.sin(y * 0.5f);
+        float cosy = (float) Math.cos(y * 0.5f);
+        float sinz = (float) Math.sin(z * 0.5f);
+        float cosz = (float) Math.cos(z * 0.5f);
         
-        result.x = (cx * cy * cz) + (sx * sy * sz);
-        result.y = (sx * cy * cz) - (cx * sy * sz);
-        result.z = (cx * sy * cz) + (sx * cy * sz);
-        result.w = (cx * cy * sz) - (sx * sy * cz);
+        result.w = cosy * cosz * cosx - siny * sinz * sinx;
+        result.x = siny * sinz * cosx + cosy * cosz * sinx;
+        result.y = siny * cosz * cosx + cosy * sinz * sinx;
+        result.z = cosy * sinz * cosx - siny * cosz * sinx;
         
         return result;
     }
@@ -145,32 +144,24 @@ public class Quaternion {
     
     public Matrix4 toMatrix4() {
     	Matrix4 result = new Matrix4();
-    	float xSq = x * x;
-    	float ySq = y * y;
-    	float zSq = z * z;
-    	float wSq = w * w;
-    	float temp1 = x * y;
-    	float temp2 = z * w;
-    	float invSq = 1 / (xSq + ySq + zSq + wSq);
 
-    	result.m00 = ( xSq - ySq - zSq + wSq) * invSq;
-    	result.m11 = (-xSq + ySq - zSq + wSq) * invSq;
-    	result.m22 = (-xSq - ySq + zSq + wSq) * invSq;
+    	float inbLen = 1.0f / (float) Math.sqrt(x * x + y * y + z * z + w * w);
+    	float qx = x * inbLen;
+    	float qy = y * inbLen;
+    	float qz = z * inbLen;
+    	float qw = w * inbLen;
     	
-    	result.m10 = (temp1 + temp2) * invSq;
-    	result.m01 = (temp1 - temp2) * invSq;
+    	result.m00 = 1.0f - 2.0f * qy * qy - 2.0f * qz * qz;
+    	result.m01 = 2.0f * qx * qy - 2.0f * qz * qw;
+        result.m02 = 2.0f * qx * qz + 2.0f * qy * qw;
+        result.m10 = 2.0f * qx * qy + 2.0f * qz * qw;
+        result.m11 = 1.0f - 2.0f * qx * qx - 2.0f * qz * qz;
+        result.m12 = 2.0f * qy * qz - 2.0f * qx * qw;
+        result.m20 = 2.0f * qx * qz - 2.0f * qy * qw;
+        result.m21 = 2.0f * qy * qz + 2.0f * qx * qw;
+    	result.m22 = 1.0f - 2.0f * qx * qx - 2.0f * qy * qy;
     	
-    	temp1 = x * z;
-    	temp2 = y * w;
-    	result.m20 = (temp1 - temp2) * invSq;
-    	result.m02 = (temp1 + temp2) * invSq;
-    	
-    	temp1 = y * z;
-    	temp2 = x * w;
-    	result.m21 = (temp1 + temp2) * invSq;
-    	result.m12 = (temp1 - temp2) * invSq;
-    	
-    	return result;
+    	return result.transpose();
     }
 
     @Override
