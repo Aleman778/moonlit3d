@@ -241,6 +241,16 @@ public final class Matrix4 {
 		return result;
 	}
 	
+	/**
+	 * Transformation matrix performs a projection from a 3d scene
+	 * onto a 2d plane.
+	 * @param fov the field of view angle
+	 * @param aspectRatio the aspect ration of the display use 
+	 * @param near the closest viewing limit in the z-direction
+	 * @param far the furthest viewing limit in the z-direction
+	 * @return the new matrix containing the projection
+	 * @see universe.app.Display#getAspectRatio()
+	 */
 	public static final Matrix4 projection(float fov, float aspectRatio, float near, float far) {
 		Matrix4 result = new Matrix4();
 		float angle = (float) Math.tan(Math.toRadians(fov / 2.0f));
@@ -251,6 +261,26 @@ public final class Matrix4 {
 		result.m22 = (-near - far) / range;
 		result.m23 = 2.0f * far * near / range;
 				
+		return result;
+	}
+	
+	public static final Matrix4 lookAt(Vector3 from, Vector3 to, Vector3 up) {
+		Matrix4 result = new Matrix4();
+		
+		Vector3 zaxis = to.sub(from).normal();
+		Vector3 xaxis = up.cross(zaxis).normal();
+		Vector3 yaxis = zaxis.cross(xaxis);
+		
+		result.m00 = xaxis.x;
+		result.m01 = xaxis.y;
+		result.m02 = xaxis.z;
+		result.m10 = yaxis.x;
+		result.m11 = yaxis.y;
+		result.m12 = yaxis.z;
+		result.m20 = zaxis.x;
+		result.m21 = zaxis.y;
+		result.m22 = zaxis.z;
+		
 		return result;
 	}
 	
@@ -310,6 +340,23 @@ public final class Matrix4 {
 		result.m31 = this.m01 * right.m30 + this.m11 * right.m31 + this.m21 * right.m32 + this.m31 * right.m33;
 		result.m32 = this.m02 * right.m30 + this.m12 * right.m31 + this.m22 * right.m32 + this.m32 * right.m33;
 		result.m33 = this.m03 * right.m30 + this.m13 * right.m31 + this.m23 * right.m32 + this.m33 * right.m33;
+		
+		return result;
+	}
+	
+	/**
+	 * Matrix2 by Vector4 multiplication.<br>
+	 * <b>Operation description:</b><br>
+	 * <code>returnVector = thisMatrix * parameterVector;</code>
+	 * @param vec the vector to multiply by
+	 * @return the new resulting vector from the multiplication
+	 */
+	public Vector4 mul(Vector4 vec) {
+		Vector4 result = new Vector4();
+		result.x = this.m00 * vec.x + this.m01 * vec.y + this.m02 * vec.z + this.m03 * vec.w;
+		result.y = this.m10 * vec.x + this.m11 * vec.y + this.m12 * vec.z + this.m13 * vec.w;
+		result.z = this.m20 * vec.x + this.m21 * vec.y + this.m22 * vec.z + this.m23 * vec.w;
+		result.w = this.m30 * vec.x + this.m31 * vec.y + this.m32 * vec.z + this.m33 * vec.w;
 		
 		return result;
 	}

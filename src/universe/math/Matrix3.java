@@ -194,6 +194,22 @@ public final class Matrix3 {
 		
 		return result;
 	}
+	
+	/**
+	 * Matrix2 by Vector3 multiplication.<br>
+	 * <b>Operation description:</b><br>
+	 * <code>returnVector = thisMatrix * parameterVector;</code>
+	 * @param vec the vector to multiply by
+	 * @return the new resulting vector from the multiplication
+	 */
+	public Vector3 mul(Vector3 vec) {
+		Vector3 result = new Vector3();
+		result.x = this.m00 * vec.x + this.m01 * vec.y + this.m02 * vec.z;
+		result.y = this.m10 * vec.x + this.m11 * vec.y + this.m12 * vec.z;
+		result.z = this.m20 * vec.x + this.m21 * vec.y + this.m22 * vec.z;
+		
+		return result;
+	}
 
 	/**
 	 * Matrix3 by Scalar scaling operation.<br>

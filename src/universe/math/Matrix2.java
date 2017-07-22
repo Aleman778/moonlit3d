@@ -99,6 +99,21 @@ public final class Matrix2 {
 		
 		return result;
 	}
+	
+	/**
+	 * Matrix2 by Vector2 multiplication.<br>
+	 * <b>Operation description:</b><br>
+	 * <code>returnVector = thisMatrix * parameterVector;</code>
+	 * @param vec the vector to multiply by
+	 * @return the new resulting vector from the multiplication
+	 */
+	public Vector2 mul(Vector2 vec) {
+		Vector2 result = new Vector2();
+		result.x = this.m00 * vec.x + this.m01 * vec.y;
+		result.y = this.m10 * vec.x + this.m11 * vec.y;
+		
+		return result;
+	}
 
 	/**
 	 * Matrix2 by Scalar scaling operation.<br>

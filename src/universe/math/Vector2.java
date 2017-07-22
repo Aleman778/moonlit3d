@@ -90,7 +90,7 @@ public final class Vector2 {
 	 * Get the normalized (unit or direction) vector.
 	 * @return the new vector containing the normalized vector.
 	 */
-	public Vector2 normalize() {
+	public Vector2 normal() {
 		float len = magnitude();
 		return new Vector2(x / len, y / len);
 	}
@@ -143,6 +143,11 @@ public final class Vector2 {
 		return sx * sx + sy * sy;
 	}
 	
+	/**
+	 * Convert the vector to a float buffer
+	 * @return the new float buffer containing the data in order
+	 * @see java.nio.FloatBuffer
+	 */
 	public FloatBuffer toFloatBuffer() {
 		FloatBuffer result = BufferUtils.createFloatBuffer(x, y);
 		return result;

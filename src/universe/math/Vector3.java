@@ -105,6 +105,70 @@ public final class Vector3 {
 		return new Vector3(x * scalar, y * scalar, z * scalar);
 	}
 	
+	/**
+	 * Get the normalized (unit or direction) vector.
+	 * @return the new vector containing the normalized vector.
+	 */
+	public Vector3 normal() {
+		float len = magnitude();
+		return new Vector3(x / len, y / len, z / len);
+	}
+	
+	/**
+	 * Get the magnitude (or length) of the vector.
+	 * @return the magnitude of the vector
+	 */
+	public float magnitude() {
+		return (float) Math.sqrt(x * x + y * y + z * z);
+	}
+
+	/**
+	 * Get the <b>squared</b> magnitude (or length) squared of the vector.<br>
+	 * Faster calculation than {@link #magnitude() magnitude()} since the square root
+	 * is not calculated. The squared magnitude can be used when comparing.<br>
+	 * <b>Note:</b> do not use this method for calculating the actual magnitude of this vector
+	 * since it is inaccurate. Use the regular {@link #magnitude() magnitude()} method instead.
+	 * @return the squared magnitude of the vector
+	 */
+	public float magnitudeSqr() {
+		return x * x + y * y + z * z;
+	}
+	
+	/**
+	 * Get the distance between this and the provided vector.
+	 * @param vec the vector used to check the distance with
+	 * @return the distance between the two vectors
+	 */
+	public float distance(Vector3 vec) {
+		float sx = x - vec.x;
+		float sy = y - vec.y;
+		float sz = z - vec.z;
+		
+		return (float) Math.sqrt(sx * sx + sy * sy + sz * sz);
+	}
+
+	/**
+	 * Get the <b>squared</b> distance between this and the provided vector.
+	 * Faster calculation than {@link #distance(Vector3) distance(Vector3)} since the square root
+	 * is not calculated. The squared distance can be used when comparing.<br>
+	 * <b>Note:</b> do not use this method for calculating the actual distance since it is inaccurate.
+	 * Use the regular {@link #distance(Vector3) distance(Vector3)} method instead.
+	 * @param vec the vector used to check the distance with
+	 * @return the squared distance between the two vectors
+	 */
+	public float distanceSqr(Vector3 vec) {
+		float sx = x - vec.x;
+		float sy = y - vec.y;
+		float sz = z - vec.z;
+		
+		return sx * sx + sy * sy + sz * sz;
+	}
+	
+	/**
+	 * Convert the vector to a float buffer
+	 * @return the new float buffer containing the data in order
+	 * @see java.nio.FloatBuffer
+	 */
 	public FloatBuffer toFloatBuffer() {
 		FloatBuffer result = BufferUtils.createFloatBuffer(x, y, z);
 		return result;

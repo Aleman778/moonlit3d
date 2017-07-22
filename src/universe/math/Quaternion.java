@@ -92,6 +92,7 @@ public class Quaternion {
         return result;
     }
     
+    
     /**
      * Get the axis angle rotation quaternion, angle is represented in <b>degrees</b>
      * @param axis the axis to rotate about
