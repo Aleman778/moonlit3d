@@ -1,17 +1,16 @@
 package universe.desktop;
 
-import universe.app.*;
-import universe.graphics.Renderer;
+import universe.core.Display;
+import universe.core.RenderApi;
+import universe.core.Screen;
+import universe.graphics.Graphics;
+import universe.opengl.GLGraphics;
 import universe.opengl.GLProfile;
-import universe.opengl.GLRenderer;
 import universe.util.Disposable;
 
 import org.lwjgl.PointerBuffer;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWWindowPosCallback;
-import org.lwjgl.glfw.GLFWWindowSizeCallback;
-import org.lwjgl.opengl.GL;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.*;
 
 import java.nio.IntBuffer;
 
@@ -33,22 +32,29 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	private static final IntBuffer xpos = BufferUtils.createIntBuffer(1);
 	private static final IntBuffer ypos = BufferUtils.createIntBuffer(1);
 	
-	private static boolean initialized = false;
 	private static final long NULL = 0L;
+	
+	private static boolean initialized = false;
 
 	private GLFWWindowPosCallback posCallback;
 	private GLFWWindowSizeCallback sizeCallback;
+	private GLFWMouseButtonCallback mouseCallback;
+	private GLFWCursorPosCallback cursorCalback;
+	private GLFWCursorEnterCallback cursorEnterCalback;
+	private GLFWKeyCallback keyCallback;
+	private GLFWScrollCallback scrollCallback;
 
 	private Object lock = new Object();
-	private Renderer renderer = new GLRenderer();
-	private GlfwScreen screen = null;
-	private GLProfile profile = null;
+	private GlfwScreen screen;
+	private GLProfile profile;
 	private Thread thread;
 	private String title;
+	
 	private long window = NULL;
 	private boolean visible = false;
 	private boolean disposed = false;
 	private boolean fullscreen = false;
+	
 	private int minWidth = -1, minHeight = -1;
 	private int maxWidth = -1, maxHeight = -1;
 	private int width, height;
@@ -90,6 +96,9 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 		this.title = title;
 		this.width = width;
 		this.height = height;
+		this.display = this;
+		this.graphics = new GLGraphics(this);
+		this.files = new GlfwFiles(this);
 		
 		setName(title);
 	}
@@ -126,6 +135,10 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	@Override
 	public final void run() {
 		createWindow();
+
+		synchronized (lock) {
+			lock.notify();	
+		}
 		
 		new Thread(new Runnable() {
 			
@@ -133,7 +146,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 			public void run() {
 				renderLoop();
 			}
-		}).start();
+		}, thread.getName() + " Renderer").start();
 
 		eventLoop();
 	}
@@ -152,7 +165,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	
 	private void renderLoop() {
 		glfwMakeContextCurrent(window);
-		GL.createCapabilities();
+		graphics.init();
 		execSetup();
 		
 		while (!isClosed()) {
@@ -201,16 +214,23 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	@Override
 	public void setRenderer(RenderApi renderer) {
 		if (isCreated()) {
-			throw new IllegalStateException("The renderer cannot be set after the window has been created.");
+			throw new IllegalStateException("The renderer cannot be set after the window has been created."); //TODO: Doesn't sound very helpful!
 		}
 		
 		switch (renderer) {
 		case OPENGL: case PREFERRED:
-			this.renderer = new GLRenderer();
+			this.graphics = new GLGraphics(this);
 			break;
 		default:
 			
 		}
+	}
+
+
+	@Override
+	public Graphics getGraphics() {
+		System.out.println("Graphics: " + graphics);
+		return graphics;
 	}
 	
 	/**
@@ -220,7 +240,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	 * set to the preferred profile based on the users hardware.
 	 * @param profile the OpenGL profile to use
 	 */
-	public void setProfile(GLProfile profile) {
+	public void setGLProfile(GLProfile profile) {
 		if (isActive()) {
 			throw new IllegalStateException("The OpenGL Profile cannot be set when window is active.");
 		}
@@ -439,7 +459,7 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 		this.fullscreen = true;
 		this.screen = screen;
 
-		System.out.println("Has reference " + hasReference());
+		
 		if (hasReference()) {
 			glfwSetWindowMonitor(window, screen.getMonitor(), 0, 0,
 					screen.getWidth(), screen.getHeight(), (int) screen.getRefreshRate());
@@ -484,8 +504,16 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 		this.visible = visible;
 		
 		if (this.visible && !isCreated()) {
-			thread = new Thread(this, getName());
-			thread.start();
+				thread = new Thread(this, getName());
+				thread.start();
+			synchronized (lock) {
+				try {
+					lock.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 			return;
 		}
 		
@@ -595,18 +623,17 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	}
 	
 	private void createWindow() {
+		setupProfile();
+		
 		if (fullscreen) {
-			System.out.println("FULLSCREEN");
 			glfwWindowHint(GLFW_REFRESH_RATE, (int) screen.getRefreshRate());
 			window = glfwCreateWindow(screen.getWidth(), screen.getHeight(), title, screen.getMonitor(), NULL);
 		} else {
-			System.out.println("NOT FULLSCREEN");
 			window = glfwCreateWindow(width, height, title, NULL, NULL);
 		}
 		
 		setupCallbacks();
 		setupLocation();
-		setupProfile();
 		setSizeLimit(minWidth, minHeight, maxWidth, maxHeight);
 	}
 	
@@ -623,18 +650,34 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	}
 	
 	private void setupCallbacks() {
-		GLFWWindowPosCallback poscallback = glfwSetWindowPosCallback(window,(long window, int x, int y) -> {
+		posCallback = glfwSetWindowPosCallback(window, (long window, int x, int y) -> {
 			if (!fullscreen) {
 				this.x = x;
 				this.y = y;
 			}
 		});
 		
-		glfwSetWindowSizeCallback(window, (long window, int w, int h) -> {
+		sizeCallback = glfwSetWindowSizeCallback(window, (long window, int w, int h) -> {
 			if (!fullscreen) {
 				this.width = w;
 				this.height = h;
 			}
+		});
+		
+		mouseCallback = glfwSetMouseButtonCallback(window, (long window, int button, int action, int mods) -> {
+			if (action == GLFW_PRESS) {
+				execMousePressed(button);
+			} else if (action == GLFW_RELEASE) {
+				execMouseReleased(button);
+			}
+		});
+		
+		cursorCalback = glfwSetCursorPosCallback(window, (long window, double xpos, double ypos) -> {
+			execMouseMoved((int) xpos, (int) ypos);
+		});
+		
+		scrollCallback = glfwSetScrollCallback(window, (long window, double xoffset, double yoffset) -> {
+			execMouseScrolled((float) xoffset, (float) yoffset);
 		});
 	}
 	

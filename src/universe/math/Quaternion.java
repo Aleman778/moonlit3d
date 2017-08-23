@@ -48,8 +48,11 @@ public class Quaternion {
 	 * Constructor used to create a new copy of the provided quaternion.
 	 * @param copy the quaternion to copy from
 	 */
-    public Quaternion(Quaternion quat) {
-        set(quat.x, quat.y, quat.z, quat.w);
+    public Quaternion(Quaternion copy) {
+        this.x = copy.x;
+        this.y = copy.y;
+        this.z = copy.z;
+        this.w = copy.w;
     }
     
     /**
@@ -125,7 +128,7 @@ public class Quaternion {
 	 * @param vec the vector to multiply this to
 	 * @return the resulting value of the dot product between the two quaternions.
 	 */
-	public float dot(Quaternion quat) {
+	public float mul(Quaternion quat) {
 		return x * quat.x + y * quat.y + z * quat.z + w * quat.w;
 	}
 

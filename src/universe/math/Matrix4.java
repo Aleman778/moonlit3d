@@ -249,7 +249,7 @@ public final class Matrix4 {
 	 * @param near the closest viewing limit in the z-direction
 	 * @param far the furthest viewing limit in the z-direction
 	 * @return the new matrix containing the projection
-	 * @see universe.app.Display#getAspectRatio()
+	 * @see universe.core.Display#getAspectRatio()
 	 */
 	public static final Matrix4 projection(float fov, float aspectRatio, float near, float far) {
 		Matrix4 result = new Matrix4();

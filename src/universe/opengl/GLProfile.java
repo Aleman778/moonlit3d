@@ -7,28 +7,6 @@ package universe.opengl;
  */
 public class GLProfile {
 	
-	public static final GLProfile PREFERRED = null;
-
-	/**
-	 * OpenGL 3.3.0 core profile
-	 */
-	public static final GLProfile GL3 = new GLProfile(3, 3, false);
-
-	/**
-	 * OpenGL 4.5.0 core profile
-	 */
-	public static final GLProfile GL4 = new GLProfile(4, 5, false);
-
-	/**
-	 * OpenGL 3.3.0 compatible profile
-	 */
-	public static final GLProfile GL3_COMPATIBLE = new GLProfile(3, 3, true);
-
-	/**
-	 * OpenGL 4.5.0 compatible profile
-	 */
-	public static final GLProfile GL4_COMPATIBLE = new GLProfile(4, 5, true);
-	
 	private final int major;
 	private final int minor;
 	private final boolean compatible;
@@ -54,17 +32,42 @@ public class GLProfile {
 	
 	/**
 	 * Get the minor version number.
-	 * @return
+	 * @return the minor version
 	 */
 	public int getMinor() {
 		return minor;
 	}
 	
 	/**
-	 * Is this profile in c
-	 * @return
+	 * Check if this profile in compatibility mode.
+	 * @return compatibility flag
 	 */
 	public boolean isCompatible() {
 		return compatible;
 	}
+
+	/**
+	 * The preferred OpenGL profile
+	 */
+	public static final GLProfile PREFERRED = null;
+
+	/**
+	 * OpenGL 3.3.0 core profile
+	 */
+	public static final GLProfile GL33 = new GLProfile(3, 3, false);
+
+	/**
+	 * OpenGL 4.5.0 core profile
+	 */
+	public static final GLProfile GL45 = new GLProfile(4, 5, false);
+
+	/**
+	 * OpenGL 3.3.0 compatible profile
+	 */
+	public static final GLProfile GL33_COMPATIBLE = new GLProfile(3, 3, true);
+
+	/**
+	 * OpenGL 4.5.0 compatible profile
+	 */
+	public static final GLProfile GL44_COMPATIBLE = new GLProfile(4, 5, true);
 }

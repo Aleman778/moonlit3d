@@ -6,6 +6,10 @@ import universe.util.BufferUtils;
 
 public final class Vector3 {
 
+	public static final Vector3 ZERO = new Vector3();
+	public static final Vector3 UP = new Vector3(0, 1, 0);
+	
+
 	/**
 	 * The first entry in the two dimensional vector
 	 */

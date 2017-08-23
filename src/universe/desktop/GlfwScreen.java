@@ -1,8 +1,8 @@
 package universe.desktop;
 
-import universe.app.Screen;
-
 import org.lwjgl.glfw.GLFWVidMode;
+
+import universe.core.Screen;
 
 import static org.lwjgl.glfw.GLFW.*;
 

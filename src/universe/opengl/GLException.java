@@ -15,21 +15,21 @@ public class GLException extends IllegalStateException {
 	private static String getErrorMessage(int errcode) {
 		switch (errcode) {
 		case GL_INVALID_ENUM:
-			return "Enum argument out of range.";
+			return "(GL_INVALID_ENUM) Enum argument out of range.";
 		case GL_INVALID_VALUE:
-			return "Numeric argument out of range.";
+			return "(GL_INVALID_VALUE) Numeric argument out of range.";
 		case GL_INVALID_OPERATION:
-			return "Operation illegal in current state.";
+			return "(GL_INVALID_OPERATION) Operation illegal in current state.";
 		case GL_STACK_OVERFLOW:
-			return "Function would cause a stack overflow.";
+			return "(GL_STACK_OVERFLOW) Function would cause a stack overflow.";
 		case GL_STACK_UNDERFLOW:
-			return "Function would cause a stack underflow.";
+			return "(GL_STACK_UNDERFLOW) Function would cause a stack underflow.";
 		case GL_OUT_OF_MEMORY:
-			return "Not enough memory left to execute function.";
+			return "(GL_OUT_OF_MEMORY) Not enough memory left to execute function.";
 		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			return "Operation performed on incomplete framebuffer.";
+			return "(GL_INVALID_FRAMEBUFFER_OPERATION: Operation performed on incomplete framebuffer.";
 		case GL_CONTEXT_LOST:
-			return "Context is lost, due to a graphics card reset.";
+			return "(GL_CONTEXT_LOST) Context is lost, due to a graphics card reset.";
 		case GL_NO_ERROR:
 			return "No error has been recorded";
 		}

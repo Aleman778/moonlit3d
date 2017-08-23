@@ -1,6 +1,9 @@
 package universe.graphics;
 
+import java.nio.FloatBuffer;
 import java.util.HashMap;
+
+import universe.util.BufferUtils;
 
 public final class Color {
 
@@ -256,6 +259,10 @@ public final class Color {
 	public float getRed() {
 		return red;
 	}
+
+	public int getRedInt() {
+		return (int) (red * 255);
+	}
 	
 	public void setRed(float red) {
 		this.red = red;
@@ -263,6 +270,10 @@ public final class Color {
 	
 	public float getGreen() {
 		return green;
+	}
+
+	public int getGreenInt() {
+		return (int) (green * 255);
 	}
 	
 	public void setGreen(float green) {
@@ -272,17 +283,35 @@ public final class Color {
 	public float getBlue() {
 		return blue;
 	}
+
+	public int getBlueInt() {
+		return (int) (blue * 255);
+	}
 	
 	public void setBlue(float blue) {
 		this.blue = blue;
 	}
 
+	public int getAlphaInt() {
+		return (int) (alpha * 255);
+	}
+	
 	public float getAlpha() {
 		return alpha;
 	}
 	
 	public void setAlpha(float alpha) {
 		this.alpha = alpha;
+	}
+	
+	/**
+	 * Convert the rgba color components to a float buffer
+	 * @return the new float buffer containing the data in order
+	 * @see java.nio.FloatBuffer
+	 */
+	public FloatBuffer toFloatBuffer() {
+		FloatBuffer result = BufferUtils.createFloatBuffer(red, green, blue, alpha);
+		return result;
 	}
 	
 	@Override
