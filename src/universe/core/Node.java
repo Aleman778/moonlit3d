@@ -2,19 +2,23 @@ package universe.core;
 
 import java.util.HashSet;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import universe.graphics.*;
 import universe.graphics.Graphics.DepthFunc;
 import universe.graphics.Graphics.StencilFunc;
 import universe.graphics.Texture.Axis;
 import universe.graphics.Texture.Wrap;
+import universe.math.Quaternion;
+import universe.math.Vector2;
+import universe.math.Vector3;
 
 public abstract class Node extends NodeEvents {
 	
 	protected Display display = null;
+	protected Transform transform = new Transform();
 
 	private HashSet<Node> children = new HashSet<>();
 	private String name = getClass().getSimpleName();
-	private Transform transform = new Transform();
 	private Node parent = null;
 	private boolean setup = false;
 	
@@ -22,11 +26,16 @@ public abstract class Node extends NodeEvents {
 		children.add(node);
 		node.parent = this;
 		node.display = display;
+		
+		if (display != null) {
+			display.addNode(node);	
+		}
 		node.execSetup();
 	}
 	
 	public final void remove(Node node) {
 		children.remove(node);	
+		display.remove(node);
 		node.parent = null;
 	}
 	
@@ -41,8 +50,6 @@ public abstract class Node extends NodeEvents {
 	public final Node parent() {
 		return parent;
 	}
-	
-	
 	
 	public final boolean isLeaf() {
 		return children.isEmpty();
@@ -107,7 +114,94 @@ public abstract class Node extends NodeEvents {
 		}
 	}
 	
+	//Math
+	protected final Vector2 vec2(float x, float y) {
+		return new Vector2(x, y);
+	}
+	
+	protected final Vector2 vec2(Vector2 vec) {
+		return new Vector2(vec);
+	}
+	
+	protected final Vector2 add(Vector2 vec1, Vector2 vec2) {
+		return vec1.add(vec2);
+	}
+	
+	//etc.
+	
+	//Transformation
+	public final void translate(Vector3 translation) {
+		transform.translate(translation);
+	}
+	
+	public final void translate(Vector2 translation) {
+		translate(new Vector3(translation.x, translation.y, 0));
+	}
+	
+	public final void translate(float x, float y, float z) {
+		transform.translate(new Vector3(x, y, z));
+	}
+	
+	public final void translate(float x, float y) {
+		translate(x, y, 0);
+	}
+	
+	public final void rotate(float r) {
+		rotateZ(r);
+	}
+	
+	public final void rotate(Vector3 axis, float angle) {
+		transform.rotate(Quaternion.rotation(axis, angle));
+	}
+	
+	public final void rotate(float x, float y, float z) {
+		transform.rotate(Quaternion.euler(x, y, z));
+	}
+	
+	public final void rotateX(float x) {
+		rotate(Vector3.RIGHT, x);
+	}
+	
+	public final void rotateY(float y) {
+		rotate(Vector3.UP, y);
+	}
+	
+	public final void rotateZ(float z) {
+		rotate(Vector3.FORWARD, z);	
+	}
+	
+	public final void scale(float f) {
+		transform.scale(new Vector3(f, f, f));
+	}
+	
+	public final void scale(float x, float y) {
+		transform.scale(new Vector3(x, y, 0));
+		
+	}
+	
+	public final void scale(float x, float y, float z) {
+		transform.scale(new Vector3(x, y, z));
+	}
+	
 	//Graphics
+	protected final void background(Color color) {
+		check();
+		display.graphics.background(color);
+	}
+	
+	protected final void rect(float x, float y, float w, float h) {
+		check();
+		display.graphics.rect(x, y, w, h);
+	}
+	
+	protected final void ellipse(float x, float y, float w, float h) {
+		check();
+		display.graphics.ellipse(x, y, w, h);
+	}
+	
+	protected final void image(Image image) {
+		
+	}
 	
 	/**
 	 * Create a new texture.
@@ -177,6 +271,16 @@ public abstract class Node extends NodeEvents {
 	protected final Shader loadShader(String fragment, String vertex) {
 		check();
 		return display.graphics.loadShader(fragment, vertex);
+	}
+
+	/**
+	 * Load a predefined shader.
+	 * @param shader the predefined shader
+	 * @return the loaded shader
+	 */
+	protected final Shader shader(int shader) {
+		check();
+		return display.graphics.shader(shader);
 	}
 	
 	/**
@@ -257,24 +361,62 @@ public abstract class Node extends NodeEvents {
 	}
 	
 	//Data Types
-	public static final int INT 	= 10;
-	public static final int FLOAT 	= 11;
-	public static final int DOUBLE 	= 12;
-	public static final int BOOLEAN = 13;
-	public static final int SHORT 	= 14;
-	public static final int LONG 	= 15;
+	/**<b>Type:</b> 4 byte integer.*/
+	public static final int INT 		   = 10;
+	/**<b>Type:</b> 4 byte unsigned integer.*/
+	public static final int UNSIGNED_INT   = 11;
+	/**<b>Type:</b> 4 byte floating point.*/
+	public static final int FLOAT 		   = 12;
+	/**<b>Type:</b> 8 byte double precision floating point.*/
+	public static final int DOUBLE 		   = 13;
+	/**<b>Type:</b> 8 byte long.*/
+	public static final int LONG 		   = 14;
+	/**<b>Type:</b> 2 byte short.*/
+	public static final int SHORT 		   = 15;
+	/**<b>Type:</b> 2 byte unsigned short.*/
+	public static final int UNSIGNED_SHORT = 16;
+	/**<b>Type:</b> 2 byte character.*/
+	public static final int CHAR		   = 17;
+	/**<b>Type:</b> boolean.*/
+	public static final int BOOLEAN 	   = 18;
+	/**<b>Type:</b> 1 byte.*/
+	public static final int BYTE           = 19;
+	/**<b>Type:</b> vector of 2 floating point numbers.*/
+	public static final int VEC2		   = 20;
+	/**<b>Type:</b> vector of 3 floating point numbers.*/
+	public static final int VEC3           = 21;
+	/**<b>Type:</b> vector of 4 floating point numbers.*/
+	public static final int VEC4		   = 22;
+	/**<b>Type:</b> matrix of 2x2 floating point numbers.*/
+	public static final int MAT2		   = 23;
+	/**<b>Type:</b> matrix of 3x3 floating point numbers.*/
+	public static final int MAT3  		   = 24;
+	/**<b>Type:</b> matrix of 4x4 floating point numbers.*/
+	public static final int MAT4		   = 25;
+	/**<b>Type:</b> quaternion of 4 floating point numbers.*/
+	public static final int QUAT		   = 26;
 	
-	//Rendering hints
-	
-	//Texture hints
+	//Rendering hints (number: even = enable, odd = disable)
+	// -> Texture hints
 	public static final int ENABLE_TEXTURE_MIPMAP       = 100;
 	public static final int DISABLE_TEXTURE_MIPMAP      = 101;
 	public static final int ENABLE_TEXTURE_ANISOTROPIC  = 102;
 	public static final int DISABLE_TEXTURE_ANISOTROPIC = 103;
 	
-	//Buffer hints
+	// -> Buffer hints
 	public static final int ENABLE_DEPTH_TEST    = 200;
 	public static final int DISABLE_DEPTH_TEST   = 201;
 	public static final int ENABLE_STENCIL_TEST  = 202;
 	public static final int DISABLE_STENCIL_TEST = 203;
+	
+	// -> OpenGL only hints
+	public static final int ENABLE_GL_DEBUG = 300;
+	public static final int DISABLE_GL_DEBUG = 301;
+	
+	// -> Predefined shaders
+	public static final int FLAT 		= 10000;
+	public static final int GOURAUD 	= 10001;
+	public static final int PHONG 		= 10002;
+	public static final int PHONG_BLINN = 10003;
+	public static final int TOON 		= 10004;
 }

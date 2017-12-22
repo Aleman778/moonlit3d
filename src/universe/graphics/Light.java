@@ -5,37 +5,31 @@ import universe.math.Vector3;
 
 public class Light extends Node {
 	
-	private Vector3 ambient;
-	private Vector3 diffuse;
-	private Vector3 specular;
+	private Color ambient  = Color.WHITE;
+	private Color diffuse  = Color.WHITE;
+	private Color specular = Color.WHITE;
 	
-	public Light() {
-		ambient = new Vector3();
-		diffuse = new Vector3();
-		specular = new Vector3();
-	}
-	
-	public void setAmbient(Vector3 ambient) {
+	public void setAmbient(Color ambient) {
 		this.ambient = ambient;
 	}
 	
-	public Vector3 getAmbient() {
+	public Color getAmbient() {
 		return ambient;
 	}
 	
-	public void setDiffuse(Vector3 diffuse) {
+	public void setDiffuse(Color diffuse) {
 		this.diffuse = diffuse;
 	}
 	
-	public Vector3 getDiffuse() {
+	public Color getDiffuse() {
 		return diffuse;
 	}
 	
-	public void setSpecular(Vector3 specular) {
+	public void setSpecular(Color specular) {
 		this.specular = specular;
 	}
 	
-	public Vector3 getSpecular() {
+	public Color getSpecular() {
 		return specular;
 	}
 }

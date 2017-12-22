@@ -283,21 +283,21 @@ public class GLTexture extends Texture {
 	/**
 	 * OpenGL parameter helper class.
 	 */
-	protected class GLTexParameter {
+	private class GLTexParameter {
 		
-		protected final int target;
+		private final int target;
 		
-		protected int   minFilter    =  GL_NEAREST_MIPMAP_LINEAR;
-		protected int   magFilter    =  GL_LINEAR;
-		protected int   wrapS	     =  GL_REPEAT;
-		protected int   wrapT	     =  GL_REPEAT;
-		protected int   wrapR	     =  GL_REPEAT;
-		protected int   lodMin       = -1000;
-		protected int   lodMax       =  1000;
-		protected int   lodLevels    =  1000;
-		protected int   lodBaseLevel =  0;
-		protected float anisotropy   =  0.0f;
-		protected float lodBias      =  0.0f;
+		private int   minFilter    =  GL_NEAREST_MIPMAP_LINEAR;
+		private int   magFilter    =  GL_LINEAR;
+		private int   wrapS	       =  GL_REPEAT;
+		private int   wrapT	       =  GL_REPEAT;
+		private int   wrapR	       =  GL_REPEAT;
+		private int   lodMin       = -1000;
+		private int   lodMax       =  1000;
+		private int   lodLevels    =  1000;
+		private int   lodBaseLevel =  0;
+		private float anisotropy   =  0.0f;
+		private float lodBias      =  0.0f;
 		
 		public GLTexParameter(int target) {
 			this.target = target;

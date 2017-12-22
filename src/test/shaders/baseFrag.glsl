@@ -3,12 +3,14 @@
 out vec4 fragColor;
 
 in vs_out {
+	vec3 position;
 	vec2 texcoord;
-} attrib;
+	vec3 normal;
+	vec4 color;
+} attr;
 
-uniform sampler2D tex;
+uniform sampler2D diffuse;
 
 void main() {
-	vec4 texel = texture(tex, attrib.texcoord);
-	fragColor = texel;
+	fragColor = texture(diffuse, attr.texcoord);
 }

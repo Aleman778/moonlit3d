@@ -1,7 +1,9 @@
 package universe.graphics;
 
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
+
 import universe.core.Display;
-import universe.core.Scene;
 import universe.graphics.Texture.Axis;
 import universe.graphics.Texture.Sample;
 import universe.graphics.Texture.Wrap;
@@ -22,7 +24,7 @@ public abstract class Graphics {
 	protected Wrap    textureWrapR       = Wrap.REPEAT;
 	
 	//Color buffer
-	protected Color background  = Color.DARKGRAY;
+	protected Color   clearColor = Color.BLACK;
 	protected boolean redMask 	= true;
 	protected boolean greenMask = true;
 	protected boolean blueMask 	= true;
@@ -37,6 +39,21 @@ public abstract class Graphics {
 	protected boolean stencilTest = false;
 	protected int stencilMask = 0xFFFFFFFF;
 	protected StencilFunc stencilFunc = StencilFunc.KEEP;
+	
+	//Stroke
+	protected boolean stroke 		 = true;
+	protected float strokeWidth 	 = 1.0f;
+	protected Color strokeColor 	 = Color.BLACK;
+	protected StrokeCap strokeCap 	 = StrokeCap.BUTT;
+	protected StrokeJoin strokeJoin = StrokeJoin.MITER;
+	
+	//Fill
+	public boolean fill 	   = true;
+	public Color fillColor 	   = Color.WHITE;
+	
+	//Tint
+	public boolean tint 	  = false;
+	public Color tintColor    = Color.WHITE;
 
 	/**
 	 * Constructor.
@@ -48,8 +65,12 @@ public abstract class Graphics {
 	
 	public abstract void init();
 	
+	public abstract void prepare();
+	
+	public abstract void present();
+	
 	public abstract void clear();
-
+	
 	public abstract Texture texture(Image image);
 	
 	public abstract Texture loadTexture(String filename);
@@ -60,25 +81,45 @@ public abstract class Graphics {
 	
 	public abstract Image loadImage(String filename);
 	
-	public abstract Scene loadScene(String filename);	
-	
 	public abstract Shader loadShader(String fragment);
 	
 	public abstract Shader loadShader(String fragment, String vertex);
-
+	
+	public abstract Shader shader(int shader);
+	
 	public abstract Shape loadShape(String filename);
 	
 	public abstract Shape createShape();
 	
+	public abstract VertexBufferObject createVBO(int capacity, boolean dynamic);
+	
+	public abstract VertexBufferObject createVBO(float[] data, boolean dynamic);
+	
+	public abstract VertexBufferObject createVBO(FloatBuffer data, boolean dynamic);
+
+	public abstract IndexBufferObject createIBO(int capacity, boolean dynamic);
+	
+	public abstract IndexBufferObject createIBO(short[] data, boolean dynamic);
+	
+	public abstract IndexBufferObject createIBO(ShortBuffer data, boolean dynamic);
+	
+	public abstract VertexArrayObject createVAO();
+	
 	public abstract void hint(int hint);
 	
-	/**
-	 * Set the clear color. 
-	 * @param colorClear the clear color
-	 */
-	public void setBackground(Color background) {
-		this.background = background;
-	}
+	public abstract void viewport(float x, float y, float w, float h);
+	
+	public abstract void render(Shape shape);
+	
+	public abstract void background(Color color);
+	
+	public abstract void background(float r, float g, float b, float a);
+	
+	public abstract void rect(float x, float y, float w, float h);
+	
+	public abstract void ellipse(float x, float y, float w, float h);
+	
+	public abstract void render(ShapeMode mode, Buffer vbo, Buffer ibo);
 	
 	/**
 	 * Enable or disable the writing to each color component of the color buffer.
@@ -88,9 +129,9 @@ public abstract class Graphics {
 	 * @param alpha enable the alpha buffer (or channel)
 	 */
 	public void setColorMask(boolean red, boolean green, boolean blue, boolean alpha) {
-		this.redMask = red;
+		this.redMask   = red;
 		this.greenMask = green;
-		this.blueMask = blue;
+		this.blueMask  = blue;
 		this.alphaMask = alpha;
 	}
 	
@@ -134,14 +175,6 @@ public abstract class Graphics {
 	 */
 	public void setStencilFunc(StencilFunc func, int ref, int mask) {
 		this.stencilFunc = func;
-	}
-
-	/**
-	 * Get the clear color.
-	 * @return the clear color
-	 */
-	public Color getColorClear() {
-		return background;
 	}
 	
 	public abstract String version();

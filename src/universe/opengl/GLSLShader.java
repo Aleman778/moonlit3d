@@ -58,10 +58,9 @@ public final class GLSLShader extends Shader {
         glDeleteShader(shader);
     }
     
-    private void setup() {
+    public void setup() {
     	if (ready)
     		return;
-    	
     	ready = true;
         glLinkProgram(object);
         glValidateProgram(object);
@@ -109,10 +108,6 @@ public final class GLSLShader extends Shader {
         object = -1;
     }
     
-    public int getLocation(String attribute) {
-    	return glGetAttribLocation(object, attribute);
-    }
-    
     /**
      * Get the shader program OpenGL reference id.
      * @return the OpenGL shader program reference id
@@ -152,7 +147,13 @@ public final class GLSLShader extends Shader {
     }
     
     @Override
-    public void setColor(String name, Color value) {
+    public void setColor3(String name, Color value) {
+        enable();
+        glUniform3fv(getUniformLocation(name), value.toFloatBufferRGB());
+    }
+    
+    @Override
+    public void setColor4(String name, Color value) {
         enable();
         glUniform4fv(getUniformLocation(name), value.toFloatBuffer());
     }
@@ -182,11 +183,15 @@ public final class GLSLShader extends Shader {
         	throw new IllegalStateException("The maximum number of texture units exceeded (" + GL_MAX_TEXTURE_UNITS + ")");
 
 
-        int unit =  getTextureUnit(name);
+        int unit = getTextureUnit(name);
         graphics.state.setActiveTexture(unit);
         
         texture.bind();
         glUniform1i(getUniformLocation(name), unit);
+    }
+
+    public int getAttribIndex(String attribute) {
+    	return glGetAttribLocation(object, attribute);
     }
     
     public int getTextureUnit(String name) {
@@ -204,8 +209,9 @@ public final class GLSLShader extends Shader {
      * @param name the name of the uniform variable
      */
     private int getUniformLocation(String name) {
-        if (uniforms.containsKey(name)) {
-            return uniforms.get(name);
+    	Integer loc = uniforms.get(name);
+        if (loc != null)  {
+            return loc;
         }
         
         int ref = glGetUniformLocation(object, name);

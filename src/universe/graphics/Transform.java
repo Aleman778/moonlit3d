@@ -6,10 +6,9 @@ import universe.math.Vector3;
 
 public class Transform {
 
-	private Matrix4 localTransform;
-	private Matrix4 worldTransform;
-	
-	
+	private Matrix4 local;
+	private Matrix4 world;
+	 
 	private Vector3 translation;
 	private Quaternion rotation;
 	private Vector3 scale;
@@ -21,7 +20,7 @@ public class Transform {
 	public Transform() {
 		translation = new Vector3();
 		rotation = new Quaternion();
-		scale = new Vector3();
+		scale = new Vector3(1, 1, 1);
 	}
 	
 	public Transform(Transform copy) {
@@ -30,18 +29,26 @@ public class Transform {
 		scale = new Vector3(copy.scale);
 	}
 	
+	public Matrix4 local() {
+		local = Matrix4.createScale(scale);
+		local = local.translate(translation);
+		local = local.rotate(rotation);
+		
+		return local;
+	}
+	
 	public void translate(Vector3 translation) {
-		this.translation.add(translation);
+		this.translation = this.translation.add(translation);
 		this.dirty = true;
 	}
 	
 	public void rotate(Quaternion rotation) {
-		this.rotation.mul(rotation);
+		this.rotation = this.rotation.mul(rotation);
 		this.dirty = true;
 	}
 	
 	public void scale(Vector3 scale) {
-		this.scale.add(scale);
+		this.scale = this.scale.mul(scale);
 		this.dirty = true;
 	}
 	

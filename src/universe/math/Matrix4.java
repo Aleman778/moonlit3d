@@ -7,6 +7,7 @@ import java.nio.FloatBuffer;
 import static java.lang.Math.*;
 
 public final class Matrix4 {
+	
 	/**
 	 * Matrix entry.
 	 */
@@ -150,8 +151,8 @@ public final class Matrix4 {
 	 * @param vec the vector components x, y, z position of the translation
 	 * @return new translation matrix
 	 */
-	public static final Matrix4 translation(Vector3 vec) {
-		return translation(vec.x, vec.y, vec.z);
+	public static final Matrix4 createTranslation(Vector3 vec) {
+		return createTranslation(vec.x, vec.y, vec.z);
 	}
 	
 	/**
@@ -161,11 +162,11 @@ public final class Matrix4 {
 	 * @param z the z position of the translation
 	 * @return new translation matrix
 	 */
-	public static final Matrix4 translation(float x, float y, float z) {
+	public static final Matrix4 createTranslation(float x, float y, float z) {
 		Matrix4 result = new Matrix4();
-		result.m30 = x;
-		result.m31 = y;
-		result.m32 = z;
+		result.m03 = x;
+		result.m13 = y;
+		result.m23 = z;
 		
 		return result;
 	}
@@ -178,7 +179,7 @@ public final class Matrix4 {
 	 * @param z the angle of the roll
 	 * @return new rotation matrix
 	 */
-	public static final Matrix4 rotation(float x, float y, float z) {
+	public static final Matrix4 createRotation(float x, float y, float z) {
 		Matrix4 result = new Matrix4();
 		x = (float) Math.toRadians(x);
 		y = (float) Math.toRadians(y);
@@ -202,8 +203,8 @@ public final class Matrix4 {
 	 * and about the provided x, y and z axis.
 	 * @return new rotation matrix
 	 */
-	public static final Matrix4 rotation(float angle, float x, float y, float z) {
-		return rotation(angle, new Vector3(x, y, z));
+	public static final Matrix4 createRotation(float angle, float x, float y, float z) {
+		return createRotation(angle, new Vector3(x, y, z));
 	}
 	
 	/**
@@ -211,7 +212,7 @@ public final class Matrix4 {
 	 * (in degrees) and about the provided axis.
 	 * @return new rotation matrix
 	 */
-	public static final Matrix4 rotation(float angle, Vector3 axis) {
+	public static final Matrix4 createRotation(float angle, Vector3 axis) {
 		return Quaternion.rotation(axis, angle).toMatrix4();
 	}
 
@@ -220,8 +221,23 @@ public final class Matrix4 {
 	 * provided quaternion.
 	 * @return new rotation matrix
 	 */
-	public static final Matrix4 rotation(Quaternion quat) {
+	public static final Matrix4 createRotation(Quaternion quat) {
 		return quat.toMatrix4();
+	}
+
+	/**
+	 * Transformation matrix performs a scale operation by the
+	 * amount in the provided axes x, y and z.
+	 * @param vec
+	 * @return
+	 */
+	public static final Matrix4 createScale(Vector3 vec) {
+		Matrix4 result = new Matrix4();
+		result.m00 = vec.x;
+		result.m11 = vec.y;
+		result.m22 = vec.z;
+
+		return result;
 	}
 
 	/**
@@ -232,7 +248,7 @@ public final class Matrix4 {
 	 * @param z
 	 * @return
 	 */
-	public static final Matrix4 scale(float x, float y, float z) {
+	public static final Matrix4 createScale(float x, float y, float z) {
 		Matrix4 result = new Matrix4();
 		result.m00 = x;
 		result.m11 = y;
@@ -251,7 +267,7 @@ public final class Matrix4 {
 	 * @return the new matrix containing the projection
 	 * @see universe.core.Display#getAspectRatio()
 	 */
-	public static final Matrix4 projection(float fov, float aspectRatio, float near, float far) {
+	public static final Matrix4 perspective(float fov, float aspectRatio, float near, float far) {
 		Matrix4 result = new Matrix4();
 		float angle = (float) Math.tan(Math.toRadians(fov / 2.0f));
 		float range = near - far;
@@ -264,11 +280,37 @@ public final class Matrix4 {
 		return result;
 	}
 	
-	public static final Matrix4 lookAt(Vector3 from, Vector3 to, Vector3 up) {
+    /**
+     * Creates an orthographic matrix
+     * @param left the left boundary
+     * @param right the right boundary
+     * @param bottom the bottom boundary
+     * @param top the top boundary
+     * @param near the near boundary
+     * @param far the far boundary
+     * @return the orthographic matrix
+     */
+    public static Matrix4 orthographic(float left, float right, float bottom, float top, float near, float far) {
+        Matrix4 result = identity();
+        result.m00 = 2.0f / (right - left);
+        result.m11 = 2.0f / (top - bottom);
+        result.m22 = 2.0f / (near - far);
+        result.m03 = (left + right) / (left - right);
+        result.m13 = (bottom + top) / (bottom - top);
+        result.m23 = (far + near) / (far - near);
+        return result;
+    }
+	
+	public static final Matrix4 lookAt(Vector3 position, Vector3 from, Vector3 to, Vector3 up) {
+		return lookAt(position, to.sub(from), up);
+	}
+	
+	public static final Matrix4 lookAt(Vector3 position, Vector3 target, Vector3 up) {
 		Matrix4 result = new Matrix4();
 		
-		Vector3 zaxis = to.sub(from).normal();
-		Vector3 xaxis = up.cross(zaxis).normal();
+		Vector3 dest = target.sub(position);
+		Vector3 zaxis = dest.unit();
+		Vector3 xaxis = up.cross(zaxis).unit();
 		Vector3 yaxis = zaxis.cross(xaxis);
 		
 		result.m00 = xaxis.x;
@@ -281,7 +323,7 @@ public final class Matrix4 {
 		result.m21 = zaxis.y;
 		result.m22 = zaxis.z;
 		
-		return result;
+		return createTranslation(position.inverse()).mul(result);
 	}
 	
 
@@ -316,7 +358,7 @@ public final class Matrix4 {
 	}
 
 	/**
-	 * Matrix3 by Matrix3 multiplication.<br>
+	 * Matrix4 by Matrix4 multiplication.<br>
 	 * <b>Operation description:</b><br>
 	 * <code>returnMatrix = thisMatrix * parameterMatrix;</code>
 	 * @param right the right operand matrix to multiply by
@@ -345,7 +387,7 @@ public final class Matrix4 {
 	}
 	
 	/**
-	 * Matrix2 by Vector4 multiplication.<br>
+	 * Matrix4 by Vector4 multiplication.<br>
 	 * <b>Operation description:</b><br>
 	 * <code>returnVector = thisMatrix * parameterVector;</code>
 	 * @param vec the vector to multiply by
@@ -488,23 +530,25 @@ public final class Matrix4 {
 	}	
 	
 	public Matrix4 translate(float x, float y, float z) {
-		return mul(translation(x, y, z));
+		return mul(createTranslation(x, y, z));
 	}
 	
 	public Matrix4 translate(Vector3 vector) {
-		return mul(translation(vector));
+		return mul(createTranslation(vector));
+	}
+	
+	public Matrix4 rotate(Quaternion quat) {
+		return mul(createRotation(quat));
 	}
 
-	/**
-	 * Checks if the matrix is orthogonal. <b>Note:</b> due to rounding errors
-	 * for floating point numbers some results may be inaccurate.
-	 * 
-	 * @return true if the matrix is orthogonal
-	 */
-	public boolean isOrthogonal() {
-		return transpose().equals(inverse());
+	public Matrix4 scale(float x, float y, float z) {
+		return mul(createScale(x, y, z));
 	}
-
+	
+	public Matrix4 scale(Vector3 scale) {
+		return mul(createScale(scale));
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Matrix4) {

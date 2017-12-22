@@ -1,7 +1,7 @@
 package universe.desktop;
 
 import universe.core.Display;
-import universe.core.RenderApi;
+import universe.core.RenderAPI;
 import universe.core.Screen;
 import universe.graphics.Graphics;
 import universe.opengl.GLGraphics;
@@ -97,8 +97,8 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 		this.width = width;
 		this.height = height;
 		this.display = this;
-		this.graphics = new GLGraphics(this);
-		this.files = new GlfwFiles(this);
+		this.graphics = null;
+		this.files = new GlfwFiles(this);;
 		
 		setName(title);
 	}
@@ -121,19 +121,12 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 		glfwTerminate();
 	}
 	
-	/**
-	 * This method does two things:
-	 *  - Swaps the buffers that are managed by the rendering system.<br>
-	 *  - Processes the events stored in the window event queue.<br>
-	 */
-	@Override
-	public final void refresh() {
-		glfwPollEvents();
-		glfwSwapBuffers(window);
-	}
-	
 	@Override
 	public final void run() {
+		if (graphics == null) {
+			setRenderer(RenderAPI.PREFERRED);
+		}
+		
 		createWindow();
 
 		synchronized (lock) {
@@ -174,8 +167,10 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+
+			updateImpl();
+			drawImpl();
 			
-			render();
 			
 			synchronized (lock) {
 				if (hasReference()) {
@@ -212,9 +207,13 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 	}
 
 	@Override
-	public void setRenderer(RenderApi renderer) {
+	public void setRenderer(RenderAPI renderer) {
 		if (isCreated()) {
-			throw new IllegalStateException("The renderer cannot be set after the window has been created."); //TODO: Doesn't sound very helpful!
+			throw new IllegalStateException("The renderer cannot be set after the window has been initialized.");
+		}
+		
+		if (graphics != null) {
+			throw new IllegalStateException("");
 		}
 		
 		switch (renderer) {
@@ -229,7 +228,6 @@ public class GlfwDisplay extends Display implements Runnable, Disposable {
 
 	@Override
 	public Graphics getGraphics() {
-		System.out.println("Graphics: " + graphics);
 		return graphics;
 	}
 	

@@ -18,7 +18,7 @@ public abstract class RenderContext {
 	
 	public abstract void init();
 	
-	public abstract RenderApi getApi();
+	public abstract RenderAPI getApi();
 	
 	@Override
 	public String toString() {

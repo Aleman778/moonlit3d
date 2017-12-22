@@ -84,7 +84,14 @@ public abstract class Shader implements Disposable {
      * @param name the variable name
      * @param color the value of the uniform
      */
-    public abstract void setColor(String name, Color color);
+    public abstract void setColor3(String name, Color color);
+    
+    /**
+     * Set shader uniform variable value.
+     * @param name the variable name
+     * @param color the value of the uniform
+     */
+    public abstract void setColor4(String name, Color color);
 
     /**
      * Set shader uniform variable value.
@@ -113,6 +120,8 @@ public abstract class Shader implements Disposable {
      * @param texture the value of the uniform
      */
     public abstract void setSampler(String name, Texture texture);
+    
+    public abstract int getAttribIndex(String name);
     
     /**
      * Different types of shaders.

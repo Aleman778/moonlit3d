@@ -288,15 +288,6 @@ public final class Matrix3 {
 		
 		return result;
 	}
-	
-	/**
-	 * Checks if the matrix is orthogonal.
-	 * <b>Note:</b> due to rounding errors for floating point numbers some results may be inaccurate.
-	 * @return true if the matrix is orthogonal
-	 */
-	public boolean isOrthogonal() {
-		return transpose().equals(inverse());
-	}
 
 	@Override
 	public boolean equals(Object obj) {

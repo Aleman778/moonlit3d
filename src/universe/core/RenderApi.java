@@ -1,14 +1,16 @@
 package universe.core;
 
-public enum RenderApi {	
+public enum RenderAPI {	
 	
 	PREFERRED("Preferred"),
-	OPENGL("OpenGL");
+	OPENGL("OpenGL"),
+	OPENGLES("OpenGLES"),
+	WEBGL("WebGL");
 	
 	
 	private final String name;
 	
-	private RenderApi(String name) {
+	private RenderAPI(String name) {
 		this.name = name;
 	}
 

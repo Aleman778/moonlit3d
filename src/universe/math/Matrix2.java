@@ -175,14 +175,6 @@ public final class Matrix2 {
 		
 		return result;
 	}
-	
-	/**
-	 * Checks if the matrix is orthogonal.
-	 * @return true if the matrix is orthogonal
-	 */
-	public boolean isOrthogonal() {
-		return transpose().equals(inverse());
-	}
 
 	@Override
 	public boolean equals(Object obj) {

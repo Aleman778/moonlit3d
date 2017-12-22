@@ -6,8 +6,10 @@ import universe.util.BufferUtils;
 
 public final class Vector3 {
 
-	public static final Vector3 ZERO = new Vector3();
-	public static final Vector3 UP = new Vector3(0, 1, 0);
+	public static final Vector3 ZERO 	= new Vector3(0, 0, 0);
+	public static final Vector3 RIGHT 	= new Vector3(1, 0, 0);
+	public static final Vector3 UP 	    = new Vector3(0, 1, 0);
+	public static final Vector3 FORWARD = new Vector3(0, 0, 1);
 	
 
 	/**
@@ -110,11 +112,30 @@ public final class Vector3 {
 	}
 	
 	/**
-	 * Get the normalized (unit or direction) vector.
-	 * @return the new vector containing the normalized vector.
+	 * Vector3 by Vector3 element wise multiplication operation.<br>
+	 * <b>Operation description:</b><br>
+	 * <code>returnVector = thisVector * parameterScalar;</code>
+	 * @param scalar the scaling (or dilation) amount
+	 * @return the new scaled vector
 	 */
-	public Vector3 normal() {
-		float len = magnitude();
+	public Vector3 mul(Vector3 vec) {
+		return new Vector3(x * vec.x, y * vec.y, z * vec.z);
+	}
+	
+	/**
+	 * Get the inverted vector.
+	 * @return the new vector with inverted components.
+	 */
+	public Vector3 inverse() {
+		return new Vector3(-x, -y, -z);
+	}
+	
+	/**
+	 * Get the unit (normalized or direction) vector.
+	 * @return the new vector containing a unit vector.
+	 */
+	public Vector3 unit() {
+		float len = norm();
 		return new Vector3(x / len, y / len, z / len);
 	}
 	
@@ -122,19 +143,19 @@ public final class Vector3 {
 	 * Get the magnitude (or length) of the vector.
 	 * @return the magnitude of the vector
 	 */
-	public float magnitude() {
+	public float norm() {
 		return (float) Math.sqrt(x * x + y * y + z * z);
 	}
 
 	/**
 	 * Get the <b>squared</b> magnitude (or length) squared of the vector.<br>
-	 * Faster calculation than {@link #magnitude() magnitude()} since the square root
+	 * Faster calculation than {@link #norm() magnitude()} since the square root
 	 * is not calculated. The squared magnitude can be used when comparing.<br>
 	 * <b>Note:</b> do not use this method for calculating the actual magnitude of this vector
-	 * since it is inaccurate. Use the regular {@link #magnitude() magnitude()} method instead.
+	 * since it is inaccurate. Use the regular {@link #norm() magnitude()} method instead.
 	 * @return the squared magnitude of the vector
 	 */
-	public float magnitudeSqr() {
+	public float normSqr() {
 		return x * x + y * y + z * z;
 	}
 	
@@ -143,7 +164,7 @@ public final class Vector3 {
 	 * @param vec the vector used to check the distance with
 	 * @return the distance between the two vectors
 	 */
-	public float distance(Vector3 vec) {
+	public float dist(Vector3 vec) {
 		float sx = x - vec.x;
 		float sy = y - vec.y;
 		float sz = z - vec.z;
@@ -153,14 +174,14 @@ public final class Vector3 {
 
 	/**
 	 * Get the <b>squared</b> distance between this and the provided vector.
-	 * Faster calculation than {@link #distance(Vector3) distance(Vector3)} since the square root
+	 * Faster calculation than {@link #dist(Vector3) distance(Vector3)} since the square root
 	 * is not calculated. The squared distance can be used when comparing.<br>
 	 * <b>Note:</b> do not use this method for calculating the actual distance since it is inaccurate.
-	 * Use the regular {@link #distance(Vector3) distance(Vector3)} method instead.
+	 * Use the regular {@link #dist(Vector3) distance(Vector3)} method instead.
 	 * @param vec the vector used to check the distance with
 	 * @return the squared distance between the two vectors
 	 */
-	public float distanceSqr(Vector3 vec) {
+	public float distSqr(Vector3 vec) {
 		float sx = x - vec.x;
 		float sy = y - vec.y;
 		float sz = z - vec.z;

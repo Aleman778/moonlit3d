@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 
 public class IOUtils {
 
-	public static byte[] toByteArray(InputStream input) {
+	public static byte[] toByteArray(InputStream src) {
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			
@@ -15,7 +15,7 @@ public class IOUtils {
 			int size = 4096;
 			byte[] buf = new byte[size];
 			
-			while ((len = input.read(buf)) != -1) {
+			while ((len = src.read(buf)) != -1) {
 				out.write(buf, 0, len);
 			}
 			out.flush();

@@ -1,9 +1,7 @@
 package universe.util;
 
 import universe.core.Node;
-import universe.core.Scene;
 import universe.graphics.Graphics;
-import universe.graphics.StandardMaterial;
 import universe.graphics.Shader;
 import universe.graphics.Shape;
 import universe.graphics.ShapeMode;
@@ -35,14 +33,6 @@ public class AssimpHelper {
 	public static boolean supportedExporter(String extension) {
 		return importers.contains("." + extension.toLowerCase() + " ");
 	}
-	
-	public static Scene processScene(Graphics graphics, AIScene scene, String path) {
-		//Scene result = new Scene(graphics, path);
-		
-		
-		return null;
-	}
-	
 	public static Node processNode(AINode node, Graphics renderer) {
 		return null;
 	}
@@ -51,13 +41,5 @@ public class AssimpHelper {
 		//Shape result = new Shape(graphics, mode, dynamic);
 		
 		return null;
-	}
-	
-	public static StandardMaterial processMaterial(Graphics graphics, AIMaterial material) {
-		Shader shader = null;
-		StandardMaterial result = new StandardMaterial(graphics);
-		
-		
-		return result;
 	}
 }

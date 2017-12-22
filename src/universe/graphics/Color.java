@@ -313,6 +313,16 @@ public final class Color {
 		FloatBuffer result = BufferUtils.createFloatBuffer(red, green, blue, alpha);
 		return result;
 	}
+
+	/**
+	 * Convert the rgb color components to a float buffer
+	 * @return the new float buffer containing the data in order
+	 * @see java.nio.FloatBuffer
+	 */
+	public FloatBuffer toFloatBufferRGB() {
+		FloatBuffer result = BufferUtils.createFloatBuffer(red, green, blue);
+		return result;
+	}
 	
 	@Override
 	public String toString() {

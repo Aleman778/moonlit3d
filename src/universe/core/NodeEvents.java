@@ -14,7 +14,7 @@ public class NodeEvents implements Disposable {
 	
 	public void update() {}
 	
-	public void render() {}
+	public void draw() {}
 	
 	public void mousePressed(int button) {}
 	

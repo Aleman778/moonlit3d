@@ -1,32 +1,41 @@
 package universe.graphics;
 
+import java.util.HashMap;
+
 public abstract class Material {
 
-	private final Graphics graphics;
+	protected final Graphics graphics;
+	protected final Shader shader;
+	protected final HashMap<String, Texture> textures;
 	
-	public Shader shader;
+	protected Texture mainTexture;
 	
-	public Material(Graphics graphics) {
+	public Material(Graphics graphics, Shader shader) {
 		this.graphics = graphics;
+		this.shader = shader;
+		this.textures = new HashMap<>();
 	}
 	
-	protected abstract void setup();
-
-	public final void enable() {
-		check();
-		
+	public void texture(Texture texture) {
+		mainTexture = texture;
+	}
+	
+	public void texture(String name, Texture texture) {
+		textures.put(name, texture);
+	}
+	
+	public void enable() {
 		shader.enable();
 		setup();
 	}
 	
-	public final void disable() {
-		check();
-		
+	public void disable() {
 		shader.disable();
 	}
 	
-	private void check() {
-		if (shader == null)
-			throw new IllegalStateException(getClass().getCanonicalName() + " does not have a shader attached.");
+	public Shader getShader() {
+		return shader;
 	}
+	
+	public abstract void setup();
 }

@@ -171,4 +171,9 @@ public final class Vector4 {
 		FloatBuffer result = BufferUtils.createFloatBuffer(x, y, z, w);
 		return result;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("Vector3: [%f, %f, %f, %f]", x, y, z, w);
+	}
 }

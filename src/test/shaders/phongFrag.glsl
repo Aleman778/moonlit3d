@@ -6,14 +6,18 @@ in vs_out {
 	vec3 position;
 	vec2 texcoord;
 	vec3 normal;
+	vec4 color;
 } attr;
 
-struct Material {
-	sampler2D diffuse;
-	sampler2D specular;
+/* struct Material {
+	vec3 ambientColor;
+	vec3 diffuseColor;
+	vec3 specularColor;
+	vec3 emissiveColor;
 	float shininess;
+	float shininessIntensity;
+	float ambientIntensity;
 };
-
 struct BaseLight {
 	vec3 ambient;
 	vec3 diffuse;
@@ -21,6 +25,7 @@ struct BaseLight {
 };
 
 struct DirectionalLight {
+	BaseLight base;
 	vec3 direction;
 };
 
@@ -29,25 +34,30 @@ uniform DirectionalLight light;
 
 uniform vec3 viewPos;
 
+ */
 void main() {
 	//Lighting maps
-	vec3 diffuseMap = vec3(texture(material.diffuse, attr.texcoord));
-	vec3 specularMap = vec3(texture(material.specular, attr.texcoord));
-
+	//vec3 diffuseMap = vec3(texture(material.diffuse, attr.texcoord));
+	//vec3 specularMap = vec3(texture(material.specular, attr.texcoord));
+/*
 	//Ambient
-	vec3 ambient = light.ambient * diffuseMap;
+	vec3 ambient = material.ambientColor * light.base.ambient;// * diffuseMap;
 	
 	//Diffuse
 	vec3 normal = normalize(attr.normal);
-	vec3 lightDir = normalize(light.position - attr.position);
+	vec3 lightDir = normalize(light.direction);
 	float diff = max(dot(normal, lightDir), 0.0);
-	vec3 diffuse = light.diffuse * diff * diffuseMap;
+	vec3 diffuse = diff * (material.diffuseColor * light.base.diffuse);// * diffuseMap;
 	
 	//Specular
 	vec3 viewDir = normalize(viewPos - attr.position);
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-	vec3 specular = light.specular * spec * specularMap;
+	vec3 specular = spec * (material.specularColor * light.base.specular);// * specularMap;
 
-	fragColor = vec4(ambient + diffuse + specular, 1.0f);
+	//Emissive
+	vec3 emissive = material.emissiveColor;
+	*/
+	//fragColor = vec4(ambient + diffuse + specular + emissive, 1.0f) + vec4(1.0f, 0.0f, 0.0f, 0.0f);
+	fragColor = attr.color;
 }
